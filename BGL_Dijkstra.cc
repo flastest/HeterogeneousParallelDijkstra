@@ -13,7 +13,7 @@ using namespace std;
 using namespace boost;
 
 
-bool DEBUG = false;
+bool DEBUG = true;
 /*
 Dijkstra's algorithm making use of BGL's adjacency table and BGL's priority_queue
 
@@ -124,10 +124,12 @@ map<vertex_descriptor, float> dijkstra_shortest_paths_swag_version(
 //	priority_queue<vertex_descriptor, vector<vertex_descriptor>, compareFunctor(&distances)> pq;
 
 	//now to enqueue source's neighbors in the pqueue
-	
-	for (uint32_t i = 0; i < num_vertices(graph); ++i)
+	pq.push(source);
+	auto [start, finish] = out_edges(source,graph);
+	for(;start != finish; start++)
 	{
-		pq.push(vertex(i,graph));
+
+		pq.push(target(*start,graph));
 	}
 
 
