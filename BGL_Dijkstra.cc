@@ -13,7 +13,7 @@ using namespace std;
 using namespace boost;
 
 
-bool DEBUG = true;
+bool DEBUG = false;
 /*
 Dijkstra's algorithm making use of BGL's adjacency table and BGL's priority_queue
 
@@ -193,97 +193,4 @@ map<vertex_descriptor, float> dijkstra_shortest_paths_swag_version(
 	return distances;
 }
 
-//iterate through all of the vertices and print them
-string print_dijkstra_results(graph_t g, distance_map_t distances)
-{
-	string results;
-
-	auto [current, finish] = vertices(g);
-	while (current != finish)
-	{
-		results = results + "node is "+to_string(   static_cast<int>(*current)) + " and distance is " + to_string(static_cast<int>(distances[*current])) + "\n";
-
-
-		//std::cout<<"node is "<<*current<<" and distance is "<<distances[*current]<<std::endl;
-
-		current++;
-	}
-
-	return results;
-
-	
-}
-
-
-
-int main()
-{
-
-	//I can't believe that this is the best way BGL could think of for
-	// graph making. No judgement.
-	
-	//this is a bidirectional graph
-	//
-	//   A-12-B-1-E
-	//   |\   |  /
-	//   2 10 3 5  
-	//   |   \|/ 
-	//   C--4-D
-	//  
-	const int num_nodes = 5;
-	enum nodes { A, B, C, D, E };
-	//char name[] = "ABCDE";
-	Edge edge_array[] = { 
-			Edge(A, B), Edge(A, C), Edge(A, D), 
-			Edge(B, A), Edge(B, D), Edge(B, E), 
-			Edge(C, A), Edge(C, D), 
-			Edge(D, A), Edge(D, B), Edge(D, C), Edge(D, E), 
-			Edge(E, B), Edge(E, D)
-	};
-	int weights[] = { 
-		12, 2, 10, 
-		12, 3, 1, 
-		2, 4,
-		10, 3, 4, 5,
-		1, 5
-	};
-	int num_arcs = sizeof(edge_array) / sizeof(Edge);
-
-	//the graph
-	graph_t g(edge_array, edge_array + num_arcs, weights, num_nodes);
-
-	// Keeps track of the predecessor of each vertex
-	std::vector<vertex_descriptor> p(num_vertices(g));
-	// Keeps track of the distance to each vertex
-	std::vector<int> d(num_vertices(g));
-
-	vertex_descriptor s = vertex(A, g);
-
-	auto startTime = chrono::high_resolution_clock::now();
-	auto distances = dijkstra_shortest_paths_swag_version(g, s, p);
-//I have no idea what the following is! it replaces p in the above call
-//	   predecessor_map(
-//	     make_iterator_property_map(p.begin(), get(vertex_index, g))).
-//	   distance_map(
-//	     make_iterator_property_map(d.begin(), get(vertex_index, g)))
-//	   );
-	auto endTime = chrono::high_resolution_clock::now();
-
-	float t = chrono::duration_cast<std::chrono::microseconds>( endTime - startTime ).count();
-
-	cout << print_dijkstra_results(g,distances);
-
-	cout << "it took " << t << " microseconds" << endl;
-
-
-	boost::dijkstra_shortest_paths(g, s,
-		predecessor_map(
-	     make_iterator_property_map(p.begin(), get(vertex_index, g))).
-	   distance_map(
-	     make_iterator_property_map(d.begin(), get(vertex_index, g)))
-	   );
-
-	return 0;
-
-}
 
