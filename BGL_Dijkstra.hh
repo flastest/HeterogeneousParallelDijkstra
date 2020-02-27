@@ -34,6 +34,7 @@ using distance_map_t = map<vertex_descriptor, float>;
 map<vertex_descriptor, float> initialize_distances_from_source(
 								const graph_t &graph);
 
+
 // this functor is just a little present for the priority queue. It'll
 // show the priority queue how to sort everything.
 struct VertexComparator;
