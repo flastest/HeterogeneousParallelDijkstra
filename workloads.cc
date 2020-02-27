@@ -25,7 +25,6 @@ using distance_map_t = map<vertex_descriptor, float>;
 
 
 
-bool TEST_DEBUG = false;
 
 
 //iterate through all of the vertices and print them
@@ -58,7 +57,7 @@ string print_dijkstra_results(graph_t g, distance_map_t distances)
 //   C--4-D
 //  
 // it will test each node as a source. 
-bool test1 ()
+bool test1 (bool TEST_DEBUG)
 {
 	const int num_nodes = 5;
 	enum nodes { A, B, C, D, E };
@@ -89,6 +88,7 @@ bool test1 ()
 
 
 
+	// test1a, with source A.
 	vertex_descriptor s = vertex(A, g);
 
 	auto distances = dijkstra_shortest_paths_swag_version(g, s, p);
@@ -100,12 +100,344 @@ bool test1 ()
 			return false;
 		}
 	}
+	if (TEST_DEBUG) cout << "test1a\n" << print_dijkstra_results(g,distances);
+
+	//test1b with source B
+	s = vertex(B, g);
+	distances = dijkstra_shortest_paths_swag_version(g, s, p);
+
+	true_distances = {9,0,7,3,1};
+	for (int i = 0; i < 5; i++)
+	{
+		if (distances[i] != true_distances[i]){
+			return false;
+		}
+	}
+	if (TEST_DEBUG) cout << "test1b\n" << print_dijkstra_results(g,distances);
 
 
-	if (TEST_DEBUG) cout << print_dijkstra_results(g,distances);
+	//test1c with source C
+	s = vertex(C, g);
+	distances = dijkstra_shortest_paths_swag_version(g, s, p);
+
+	true_distances = {2,7,0,4,8};
+	for (int i = 0; i < 5; i++)
+	{
+		if (distances[i] != true_distances[i]){
+			return false;
+		}
+	}
+	if (TEST_DEBUG) cout << "test1c\n" << print_dijkstra_results(g,distances);
+
+
+
+	//test1d with source D
+	s = vertex(D, g);
+	distances = dijkstra_shortest_paths_swag_version(g, s, p);
+
+	true_distances = {6,3,4,0,4};
+	for (int i = 0; i < 5; i++)
+	{
+		if (distances[i] != true_distances[i]){
+			return false;
+		}
+	}
+	if (TEST_DEBUG) cout << "test1d\n" << print_dijkstra_results(g,distances);
+
+	//test1e with source E
+	s = vertex(E, g);
+	distances = dijkstra_shortest_paths_swag_version(g, s, p);
+
+	true_distances = {10,1,8,4,0};
+	for (int i = 0; i < 5; i++)
+	{
+		if (distances[i] != true_distances[i]){
+			return false;
+		}
+	}
+	if (TEST_DEBUG) cout << "test1e\n" << print_dijkstra_results(g,distances);
+
+
 
 	return true;
 }
+
+//tests a edge with weight zero
+//  
+//  A-0-B
+//  \   |
+//  3\ /2
+//    C
+//
+bool test2(bool TEST_DEBUG)
+{
+	const int num_nodes = 3;
+	enum nodes { A, B, C };
+	//char name[] = "ABCDE";
+	Edge edge_array[] = { 
+			Edge(A, B), Edge(A, C), 
+			Edge(B, A), Edge(B, C), 
+			Edge(C, A), Edge(C, B)
+	};
+	int weights[] = { 
+		0, 3,
+		0, 2,
+		3, 2
+	};
+	int num_arcs = sizeof(edge_array) / sizeof(Edge);
+
+	//the graph
+	graph_t g(edge_array, edge_array + num_arcs, weights, num_nodes);
+
+	// Keeps track of the predecessor of each vertex
+	std::vector<vertex_descriptor> p(num_vertices(g));
+	// Keeps track of the distance to each vertex
+	std::vector<int> d(num_vertices(g));
+
+
+
+	// test2a, with source A.
+	vertex_descriptor s = vertex(A, g);
+
+	auto distances = dijkstra_shortest_paths_swag_version(g, s, p);
+
+	vector<int> true_distances = {0, 0, 2};
+	if (TEST_DEBUG) cout << "test2a\n" << print_dijkstra_results(g,distances);
+	for (int i = 0; i < num_nodes; i++)
+	{
+		if (distances[i] != true_distances[i]){
+			return false;
+		}
+	}
+	
+
+
+	// test2b, with source B.
+	s = vertex(B, g);
+
+	distances = dijkstra_shortest_paths_swag_version(g, s, p);
+
+	true_distances = {0, 0, 2};
+	if (TEST_DEBUG) cout << "test2b\n" << print_dijkstra_results(g,distances);
+	for (int i = 0; i < num_nodes; i++)
+	{
+		if (distances[i] != true_distances[i]){
+			return false;
+		}
+	}
+	
+
+	// test2c, with source C.
+	s = vertex(C, g);
+
+	distances = dijkstra_shortest_paths_swag_version(g, s, p);
+
+	true_distances = {2, 2, 0};
+	if (TEST_DEBUG) cout << "test2c\n" << print_dijkstra_results(g,distances);
+	for (int i = 0; i < num_nodes; i++)
+	{
+		if (distances[i] != true_distances[i]){
+			return false;
+		}
+	}
+	
+	return true;
+}
+
+// same as test 2 but without the edge length zero
+bool test2i(bool TEST_DEBUG)
+{
+	const int num_nodes = 3;
+	enum nodes { A, B, C };
+	//char name[] = "ABCDE";
+	Edge edge_array[] = { 
+			Edge(A, B), Edge(A, C), 
+			Edge(B, A), Edge(B, C), 
+			Edge(C, A), Edge(C, B)
+	};
+	int weights[] = { 
+		1, 3,
+		1, 2,
+		3, 2
+	};
+	int num_arcs = sizeof(edge_array) / sizeof(Edge);
+
+	//the graph
+	graph_t g(edge_array, edge_array + num_arcs, weights, num_nodes);
+
+	// Keeps track of the predecessor of each vertex
+	std::vector<vertex_descriptor> p(num_vertices(g));
+	// Keeps track of the distance to each vertex
+	std::vector<int> d(num_vertices(g));
+
+
+
+	// test2a, with source A.
+	vertex_descriptor s = vertex(A, g);
+
+	auto distances = dijkstra_shortest_paths_swag_version(g, s, p);
+
+	vector<int> true_distances = {0, 1, 3};
+	if (TEST_DEBUG) cout << "test2a\n" << print_dijkstra_results(g,distances);
+	for (int i = 0; i < num_nodes; i++)
+	{
+		if (distances[i] != true_distances[i]){
+			return false;
+		}
+	}
+	
+
+
+	// test2b, with source B.
+	s = vertex(B, g);
+
+	distances = dijkstra_shortest_paths_swag_version(g, s, p);
+
+	true_distances = {1, 0, 2};
+	if (TEST_DEBUG) cout << "test2b\n" << print_dijkstra_results(g,distances);
+	for (int i = 0; i < num_nodes; i++)
+	{
+		if (distances[i] != true_distances[i]){
+			return false;
+		}
+	}
+	
+
+	// test2c, with source C.
+	s = vertex(C, g);
+
+	distances = dijkstra_shortest_paths_swag_version(g, s, p);
+
+	true_distances = {3, 2, 0};
+	if (TEST_DEBUG) cout << "test2c\n" << print_dijkstra_results(g,distances);
+	for (int i = 0; i < num_nodes; i++)
+	{
+		if (distances[i] != true_distances[i]){
+			return false;
+		}
+	}
+	
+	return true;
+}
+
+
+//  disconnected, directed graph
+//  
+//     2     2  
+//    A--B <-- E
+//   2|  |2
+//    C--D
+//     2 
+bool test3(bool TEST_DEBUG)
+{
+	const int num_nodes = 3;
+	enum nodes { A, B, C, D, E };
+	Edge edge_array[] = { 
+			Edge(A, B), Edge(A, C), 
+			Edge(B, A), Edge(B, D), 
+			Edge(C, A), Edge(C, D),
+			Edge(D, B), Edge(D, C),
+			Edge(E,B)
+	};
+	int weights[] = { 
+		2, 2,
+		2, 2,
+		2, 2,
+		2, 2,
+		2
+	};
+	int num_arcs = sizeof(edge_array) / sizeof(Edge);
+
+	//the graph
+	graph_t g(edge_array, edge_array + num_arcs, weights, num_nodes);
+
+	// Keeps track of the predecessor of each vertex
+	std::vector<vertex_descriptor> p(num_vertices(g));
+	// Keeps track of the distance to each vertex
+	std::vector<int> d(num_vertices(g));
+
+
+
+	// test3a, with source A.
+	vertex_descriptor s = vertex(A, g);
+
+	auto distances = dijkstra_shortest_paths_swag_version(g, s, p);
+
+	vector<float> true_distances = {0, 2, 2, 4, INFINITY};
+	if (TEST_DEBUG) cout << "test3a\n" << print_dijkstra_results(g,distances);
+	for (int i = 0; i < num_nodes; i++)
+	{
+		if (distances[i] != true_distances[i]){
+			return false;
+		}
+	}
+	
+
+
+	// test3b, with source B.
+	s = vertex(B, g);
+
+	distances = dijkstra_shortest_paths_swag_version(g, s, p);
+
+	true_distances = {2, 0, 4, 2, INFINITY};
+	if (TEST_DEBUG) cout << "test3b\n" << print_dijkstra_results(g,distances);
+	for (int i = 0; i < num_nodes; i++)
+	{
+		if (distances[i] != true_distances[i]){
+			return false;
+		}
+	}
+	
+
+	// test3c, with source C.
+	s = vertex(C, g);
+
+	distances = dijkstra_shortest_paths_swag_version(g, s, p);
+
+	true_distances = {2, 4, 0, 2, INFINITY};
+	if (TEST_DEBUG) cout << "test3c\n" << print_dijkstra_results(g,distances);
+	for (int i = 0; i < num_nodes; i++)
+	{
+		if (distances[i] != true_distances[i]){
+			return false;
+		}
+	}
+	
+
+
+	// test3d, with source D.
+	s = vertex(D, g);
+
+	distances = dijkstra_shortest_paths_swag_version(g, s, p);
+
+	true_distances = {4, 2, 2, 0, INFINITY};
+	if (TEST_DEBUG) cout << "test3d\n" << print_dijkstra_results(g,distances);
+	for (int i = 0; i < num_nodes; i++)
+	{
+		if (distances[i] != true_distances[i]){
+			return false;
+		}
+	}
+
+
+	// test3e, with source E.
+	s = vertex(E, g);
+
+	distances = dijkstra_shortest_paths_swag_version(g, s, p);
+
+	true_distances = {4, 2, 6, 4, 0};
+	if (TEST_DEBUG) cout << "test3c\n" << print_dijkstra_results(g,distances);
+	for (int i = 0; i < num_nodes; i++)
+	{
+		if (distances[i] != true_distances[i]){
+			return false;
+		}
+	}
+
+	return true;
+}
+
+
 
 bool test1BGL ()
 {
@@ -171,7 +503,33 @@ float timed_dijkstra(graph_t g, vertex_descriptor s)
 int main()
 {
 
-	if(test1()) cout<<"test1 passed"<<endl;
+	if(test1(false)) 
+	{
+		cout<<"test1 passed"<<endl;
+	} else {
+		cout<<"test1 failed!!"<<endl;
+	}
+
+	if(test2(true)) 
+	{
+		cout<<"test2 passed"<<endl;
+	} else {
+		cout<<"test2 failed!!"<<endl;
+	}
+
+	if(test2i(false)) 
+	{
+		cout<<"test2i passed"<<endl;
+	} else {
+		cout<<"test2i failed!!"<<endl;
+	}
+
+	if(test3(false)) 
+	{
+		cout<<"test3 passed"<<endl;
+	} else {
+		cout<<"test3 failed!!"<<endl;
+	}
 
 	return 0;
 
