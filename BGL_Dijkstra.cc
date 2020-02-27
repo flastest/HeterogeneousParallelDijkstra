@@ -128,7 +128,6 @@ map<vertex_descriptor, float> dijkstra_shortest_paths_swag_version(
 	auto [start, finish] = out_edges(source,graph);
 	for(;start != finish; start++)
 	{
-
 		pq.push(target(*start,graph));
 	}
 
@@ -174,14 +173,17 @@ map<vertex_descriptor, float> dijkstra_shortest_paths_swag_version(
 				if (newDist < distances[neighbor])
 				{
 					if (DEBUG) std::cout<< newDist << " is closer than " << distances[neighbor] << std::endl;
+					distances[neighbor] = newDist;
 					pq.push(vertex(neighbor,graph));
+					//does this update the priority queue?????
+
 
 					// if the new distance is better than the old heuristic,
 					// then update the pqueue
 					predecessors.push_back(neighbor);
 
 
-					distances[neighbor] = newDist;
+					
 				}
 			}
 		}
