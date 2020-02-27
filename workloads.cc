@@ -245,6 +245,12 @@ bool test2(bool TEST_DEBUG)
 }
 
 // same as test 2 but without the edge length zero
+//  
+//  A-1-B
+//  \   |
+//  3\ /2
+//    C
+//
 bool test2i(bool TEST_DEBUG)
 {
 	const int num_nodes = 3;
@@ -328,9 +334,10 @@ bool test2i(bool TEST_DEBUG)
 //   2|  |2
 //    C--D
 //     2 
+//
 bool test3(bool TEST_DEBUG)
 {
-	const int num_nodes = 3;
+	const int num_nodes = 5;
 	enum nodes { A, B, C, D, E };
 	Edge edge_array[] = { 
 			Edge(A, B), Edge(A, C), 
@@ -438,6 +445,214 @@ bool test3(bool TEST_DEBUG)
 }
 
 
+// A directed graph with no cycles
+//
+// A -2-> B -3-> C
+//
+bool test4(bool TEST_DEBUG)
+{
+	const int num_nodes = 3;
+	enum nodes { A, B, C};
+	Edge edge_array[] = { 
+			Edge(A, B), 
+			Edge(B, C)
+	};
+	int weights[] = { 
+		2, 3
+	};
+	int num_arcs = sizeof(edge_array) / sizeof(Edge);
+
+	//the graph
+	graph_t g(edge_array, edge_array + num_arcs, weights, num_nodes);
+
+	// Keeps track of the predecessor of each vertex
+	std::vector<vertex_descriptor> p(num_vertices(g));
+	// Keeps track of the distance to each vertex
+	std::vector<int> d(num_vertices(g));
+
+
+
+	// test4a, with source A.
+	vertex_descriptor s = vertex(A, g);
+
+	auto distances = dijkstra_shortest_paths_swag_version(g, s, p);
+
+	vector<float> true_distances = { 0, 2, 5};
+	if (TEST_DEBUG) cout << "test4a\n" << print_dijkstra_results(g,distances);
+	for (int i = 0; i < num_nodes; i++)
+	{
+		if (distances[i] != true_distances[i]){
+			return false;
+		}
+	}
+
+	// test4b, with source B.
+	s = vertex(B, g);
+
+	distances = dijkstra_shortest_paths_swag_version(g, s, p);
+
+	true_distances = {INFINITY, 0, 3};
+	if (TEST_DEBUG) cout << "test4b\n" << print_dijkstra_results(g,distances);
+	for (int i = 0; i < num_nodes; i++)
+	{
+		if (distances[i] != true_distances[i]){
+			return false;
+		}
+	}
+
+
+	// test4c, with source C.
+	s = vertex(C, g);
+
+	distances = dijkstra_shortest_paths_swag_version(g, s, p);
+
+	true_distances = {INFINITY, INFINITY, 0};
+	if (TEST_DEBUG) cout << "test4c\n" << print_dijkstra_results(g,distances);
+	for (int i = 0; i < num_nodes; i++)
+	{
+		if (distances[i] != true_distances[i]){
+			return false;
+		}
+	}
+
+	return true;
+}
+
+
+// a graph with a cycle
+//       
+//      .-, 1
+//  A-1->B-'
+//    
+bool test5(bool TEST_DEBUG)
+{
+	const int num_nodes = 2;
+	enum nodes { A, B };
+	Edge edge_array[] = { 
+			Edge(A, B), 
+			Edge(B, B)
+	};
+	int weights[] = { 
+		1, 1
+	};
+	int num_arcs = sizeof(edge_array) / sizeof(Edge);
+
+	//the graph
+	graph_t g(edge_array, edge_array + num_arcs, weights, num_nodes);
+
+	// Keeps track of the predecessor of each vertex
+	std::vector<vertex_descriptor> p(num_vertices(g));
+	// Keeps track of the distance to each vertex
+	std::vector<int> d(num_vertices(g));
+
+
+
+	// test5a, with source A.
+	vertex_descriptor s = vertex(A, g);
+
+	auto distances = dijkstra_shortest_paths_swag_version(g, s, p);
+
+	vector<float> true_distances = { 0, 1};
+	if (TEST_DEBUG) cout << "test5a\n" << print_dijkstra_results(g,distances);
+	for (int i = 0; i < num_nodes; i++)
+	{
+		if (distances[i] != true_distances[i]){
+			return false;
+		}
+	}
+
+	// test5b, with source B.
+	s = vertex(B, g);
+
+	distances = dijkstra_shortest_paths_swag_version(g, s, p);
+
+	true_distances = {INFINITY, 0};
+	if (TEST_DEBUG) cout << "test5b\n" << print_dijkstra_results(g,distances);
+	for (int i = 0; i < num_nodes; i++)
+	{
+		if (distances[i] != true_distances[i]){
+			return false;
+		}
+	}
+
+	return true;
+}
+
+// A directed graph with a cycle
+//
+// A -2-> B -3-> C
+//        ^     /
+//         `-2-'
+//
+bool test6(bool TEST_DEBUG)
+{
+	const int num_nodes = 3;
+	enum nodes { A, B, C};
+	Edge edge_array[] = { 
+			Edge(A, B), 
+			Edge(B, C),
+			Edge(C, B)
+	};
+	int weights[] = { 
+		2, 3, 2
+	};
+	int num_arcs = sizeof(edge_array) / sizeof(Edge);
+
+	//the graph
+	graph_t g(edge_array, edge_array + num_arcs, weights, num_nodes);
+
+	// Keeps track of the predecessor of each vertex
+	std::vector<vertex_descriptor> p(num_vertices(g));
+	// Keeps track of the distance to each vertex
+	std::vector<int> d(num_vertices(g));
+
+
+
+	// test6a, with source A.
+	vertex_descriptor s = vertex(A, g);
+
+	auto distances = dijkstra_shortest_paths_swag_version(g, s, p);
+
+	vector<float> true_distances = { 0, 2, 5};
+	if (TEST_DEBUG) cout << "test6a\n" << print_dijkstra_results(g,distances);
+	for (int i = 0; i < num_nodes; i++)
+	{
+		if (distances[i] != true_distances[i]){
+			return false;
+		}
+	}
+
+	// test6b, with source B.
+	s = vertex(B, g);
+
+	distances = dijkstra_shortest_paths_swag_version(g, s, p);
+
+	true_distances = {INFINITY, 0, 3};
+	if (TEST_DEBUG) cout << "test6b\n" << print_dijkstra_results(g,distances);
+	for (int i = 0; i < num_nodes; i++)
+	{
+		if (distances[i] != true_distances[i]){
+			return false;
+		}
+	}
+
+
+	// test6c, with source C.
+	s = vertex(C, g);
+
+	distances = dijkstra_shortest_paths_swag_version(g, s, p);
+
+	true_distances = {INFINITY, 2, 0};
+	if (TEST_DEBUG) cout << "test6c\n" << print_dijkstra_results(g,distances);
+	for (int i = 0; i < num_nodes; i++)
+	{
+		if (distances[i] != true_distances[i]){
+			return false;
+		}
+	}
+
+	return true;
+}
 
 bool test1BGL ()
 {
@@ -508,13 +723,15 @@ int main()
 		cout<<"test1 passed"<<endl;
 	} else {
 		cout<<"test1 failed!!"<<endl;
+		test1(true);
 	}
 
-	if(test2(true)) 
+	if(test2(false)) 
 	{
 		cout<<"test2 passed"<<endl;
 	} else {
 		cout<<"test2 failed!!"<<endl;
+		test2(true);
 	}
 
 	if(test2i(false)) 
@@ -522,6 +739,7 @@ int main()
 		cout<<"test2i passed"<<endl;
 	} else {
 		cout<<"test2i failed!!"<<endl;
+		test2i(true);
 	}
 
 	if(test3(false)) 
@@ -529,6 +747,31 @@ int main()
 		cout<<"test3 passed"<<endl;
 	} else {
 		cout<<"test3 failed!!"<<endl;
+		test3(true);
+	}
+
+	if(test4(false)) 
+	{
+		cout<<"test4 passed"<<endl;
+	} else {
+		cout<<"test4 failed!!"<<endl;
+		test4(true);
+	}
+
+	if(test5(false)) 
+	{
+		cout<<"test5 passed"<<endl;
+	} else {
+		cout<<"test5 failed!!"<<endl;
+		test5(true);
+	}
+
+	if(test6(false)) 
+	{
+		cout<<"test6 passed"<<endl;
+	} else {
+		cout<<"test6 failed!!"<<endl;
+		test6(true);
 	}
 
 	return 0;
