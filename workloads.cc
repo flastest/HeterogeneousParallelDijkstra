@@ -676,7 +676,6 @@ std::vector<int> testBGL (graph_t g, vertex_descriptor s)
 
 
 
-	vertex_descriptor s = vertex(A, g);
 	boost::dijkstra_shortest_paths(g, s,
 		predecessor_map(
 	     make_iterator_property_map(p.begin(), get(vertex_index, g))).
