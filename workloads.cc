@@ -654,30 +654,21 @@ bool test6(bool TEST_DEBUG)
 	return true;
 }
 
-bool test1BGL ()
+
+// disconnected graph
+//  
+//  A-12>B
+//  ^    ^     E
+//  2    3     |5
+//  |    |     F
+//  C-4--D
+//  
+
+
+//tests a graph with the BGL
+std::vector<int> testBGL (graph_t g, vertex_descriptor s)
 {
-	const int num_nodes = 5;
-	enum nodes { A, B, C, D, E };
-	//char name[] = "ABCDE";
-	Edge edge_array[] = { 
-			Edge(A, B), Edge(A, C), Edge(A, D), 
-			Edge(B, A), Edge(B, D), Edge(B, E), 
-			Edge(C, A), Edge(C, D), 
-			Edge(D, A), Edge(D, B), Edge(D, C), Edge(D, E), 
-			Edge(E, B), Edge(E, D)
-	};
-	int weights[] = { 
-		12, 2, 10, 
-		12, 3, 1, 
-		2, 4,
-		10, 3, 4, 5,
-		1, 5
-	};
-	int num_arcs = sizeof(edge_array) / sizeof(Edge);
-
-	//the graph
-	graph_t g(edge_array, edge_array + num_arcs, weights, num_nodes);
-
+	
 	// Keeps track of the predecessor of each vertex
 	std::vector<vertex_descriptor> p(num_vertices(g));
 	// Keeps track of the distance to each vertex
@@ -692,7 +683,7 @@ bool test1BGL ()
 	   distance_map(
 	     make_iterator_property_map(d.begin(), get(vertex_index, g)))
 	   );
-	return true;
+	return d;
 
 }
 
