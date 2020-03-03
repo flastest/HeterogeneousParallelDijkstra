@@ -1,13 +1,4 @@
-#include <boost/graph/adjacency_list.hpp>
-#include <boost/graph/dijkstra_shortest_paths.hpp>
-
-#include <queue>
-#include <map>
-
-#include <chrono>
-#include <iostream>
-#include <cassert>
-
+#include "BGL_Dijkstra.hh"
 
 using namespace std;
 using namespace boost;
@@ -53,7 +44,7 @@ using distance_map_t = map<vertex_descriptor, float>;
 
 // this takes a graph and makes a map of nodes and distances to source.
 // nodes are initialized to infinity distance from source
-map<vertex_descriptor, float> initialize_distances_from_source(
+distance_map_t initialize_distances_from_source(
 								const graph_t &graph)
 {
 	map<vertex_descriptor, float> distances;
@@ -87,8 +78,6 @@ public:
 	: distances_(distances)
 	{}
 
-	// I know this is wrong, how tf do I pass a map as input too
-	//solution: make distances global
 	bool operator()(const vertex_descriptor &a, 
 					const vertex_descriptor &b ) const 
 	{
@@ -96,17 +85,67 @@ public:
 	}
 };
 
+//does each thread ID correspond to a vertex descriptor?
+//offer corresponds to vd
+void relax(vertex_descriptor v, 
+		   float offer, 
+		   vector<mutex>& offer_mutexes, 
+		   distance_map_t& offers, 
+		   distance_map_t& distances )
+{
+	offer_mutexes[v].lock();
+	//now I can play around with offers[v]
+	
+
+	// if the current offer is better than what's in distances, and better than the current offer, 
+	// we can replace the old offer with the new one.
+	if (offer < distances[v]) 
+	{
+		auto vector_offer = offers[v];
+		//if there is no current offer, than this offer is the best.
+		if (!vector_offer) {
+			offers[v] = offer;
+		}
+		else 
+		{
+			//if the current offer is better than the old offer, replace also
+			if (offer < vector_offer) 
+			{
+				//this is publishOfferNoMP
+				offers[v] = offer;
+			}
+		}
+	}
+	offer_mutexes[v].unlock();
+
+}
+
 
 // returns a list of all nodes and distances to source
-map<vertex_descriptor, float> dijkstra_shortest_paths_swag_version(
+distance_map_t dijkstra_shortest_paths_swag_version(
 						const graph_t &graph, 
 						const vertex_descriptor &source, 
 						vector<vertex_descriptor> &predecessors)
 {
+
+	//all the threads, pretty self explanatory
+	vector<thread> threads;
+
+	distance_map_t distances = initialize_distances_from_source(graph);
+	vector<mutex> distance_mutexes;
+
+	distance_map_t offers; //initializes a table that keeps track of all the offers for a certain vertex
+	vector<mutex> offer_mutexes;
+
+	
+	//this keeps track of the threads that are done
+	vector<bool> done; 
+
+
+
 	//for using BGL's graph_t (adjacency table):
 	//https://www.boost.org/doc/libs/1_60_0/libs/graph/doc/adjacency_list.html
 
-	auto distances = initialize_distances_from_source(graph);
 
 	//set the source node's distance from source to zero
 	distances[source] = 0;
