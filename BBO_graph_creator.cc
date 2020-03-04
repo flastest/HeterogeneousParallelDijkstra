@@ -62,7 +62,7 @@ graph_t graph_from_file(std::string name)
 
 		if (input.substr(1) != "#")
 		{
-			std::string team_a = input.substr(input.find(",")+3,input.size());
+			std::string team_a = input.substr(input.find(",")+2,input.size());
 			std::string team_b = team_a.substr(team_a.find(",")+3,team_a.size());
 			team_a = team_a.substr(team_a.find(",")+3);
 			team_b = team_b.substr(team_b.find(",")+3);
