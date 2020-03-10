@@ -29,12 +29,12 @@ typedef graph_traits < graph_t >::edge_descriptor edge_descriptor;
 
 typedef std::pair<int, int> Edge;
 
+using predecessor_map_t = map<vertex_descriptor,vertex_descriptor>;
 using distance_map_t = map<vertex_descriptor, float>;
-
 
 // this takes a graph and makes a map of nodes and distances to source.
 // nodes are initialized to infinity distance from source
-map<vertex_descriptor, float> initialize_distances_from_source(
+distance_map_t initialize_distances_from_source(
 								const graph_t &graph);
 
 
@@ -44,10 +44,10 @@ struct VertexComparator;
 
 
 // returns a list of all nodes and distances to source
-map<vertex_descriptor, float> dijkstra_shortest_paths_swag_version(
+distance_map_t dijkstra_shortest_paths_swag_version(
 						const graph_t &graph, 
 						const vertex_descriptor &source, 
-						vector<vertex_descriptor> &predecessors);
+						predecessor_map_t &predecessors);
 
 
 
