@@ -1,7 +1,6 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/dijkstra_shortest_paths.hpp>
 
-#include <queue>
 #include <map>
 
 #include <chrono>
@@ -9,7 +8,7 @@
 #include <cassert>
 #include <thread>
 #include <mutex>
-
+#include <queue>
 
 #pragma once
 

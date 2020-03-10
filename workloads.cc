@@ -13,6 +13,10 @@ using namespace std;
 using namespace boost;
 
 
+
+//for using BGL's graph_t (adjacency table):
+//https://www.boost.org/doc/libs/1_60_0/libs/graph/doc/adjacency_list.html
+
 typedef adjacency_list<listS, vecS, directedS,
                    no_property,                 // Vertex properties
                    property<edge_weight_t, int> // Edge properties
@@ -703,6 +707,11 @@ float timed_dijkstra(graph_t g, vertex_descriptor s)
 
 
 
+
+bool test_BBO_workload(vertex_descriptor s){
+	//aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaah
+	return true;
+}
 
 
 
