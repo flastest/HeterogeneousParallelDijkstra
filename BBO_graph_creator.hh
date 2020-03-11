@@ -1,6 +1,8 @@
 #include <fstream>
 #include <boost/graph/adjacency_list.hpp>
 #include <vector>
+#include <sstream>
+#include <string>
 
 #pragma once
 

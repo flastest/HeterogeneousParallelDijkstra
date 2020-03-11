@@ -675,24 +675,25 @@ bool test6(bool TEST_DEBUG)
 
 
 //tests a graph with the BGL
-std::vector<int> testBGL (graph_t g, vertex_descriptor s)
+//takes inputs of a graph, a source node, and a reference to a vector which will contain predecessors
+//returns all of the distances as a vector. I guess each index corresponds to a vertex descriptor
+std::vector<int> testBGL (graph_t g, vertex_descriptor s, std::vector<vertex_descriptor> &p)
 {
 	
 	// Keeps track of the predecessor of each vertex
-	predecessor_map_t p;
+	//std::vector<vertex_descriptor> p(num_vertices(g));
 	// Keeps track of the distance to each vertex
 	std::vector<int> d(num_vertices(g));
 
 
 
-/*	boost::dijkstra_shortest_paths(g, s,
+	boost::dijkstra_shortest_paths(g, s,
 		predecessor_map(
 	     make_iterator_property_map(p.begin(), get(vertex_index, g))).
 	   distance_map(
 	     make_iterator_property_map(d.begin(), get(vertex_index, g)))
 	   );
-*/	
-	(void) s ;
+	
 	return d;
 }
 
@@ -712,9 +713,13 @@ float timed_dijkstra(graph_t g, vertex_descriptor s)
 
 
 
-bool test_BBO_workload(vertex_descriptor s){
+bool test_DOTA(bool TEST_DEBUG){
 	//aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaah
-	(void) s;
+	if (TEST_DEBUG) std::cout<<"loading graph from BBO"<<std::endl;
+	graph_t g = graph_from_file("DotaLeague/DotaLeague_Edge_Basic");
+
+
+
 	return true;
 }
 
@@ -778,6 +783,14 @@ int main()
 	} else {
 		cout<<"test6 failed!!"<<endl;
 		test6(true);
+	}
+
+	if(test_DOTA(false)) 
+	{
+		cout<<"test_DOTA passed"<<endl;
+	} else {
+		cout<<"test_DOTA failed!!"<<endl;
+		test_DOTA(true);
 	}
 
 	return 0;
