@@ -1,14 +1,15 @@
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/dijkstra_shortest_paths.hpp>
 
-#include <map>
+#include <map> //for maps
 
-#include <chrono>
-#include <iostream>
-#include <cassert>
-#include <thread>
-#include <mutex>
-#include <queue>
+#include <chrono> //for timing
+#include <iostream> //for cout, debug logs
+#include <cassert> //for asserts I dont use
+#include <thread> //for threads
+#include <mutex> //for mutex
+#include <queue> //for pqueue
+#include <memory> //for unique ptr to mutex
 
 #pragma once
 
