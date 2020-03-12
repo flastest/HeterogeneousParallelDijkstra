@@ -1,10 +1,10 @@
 CXX = g++
-CCFLAGS = -Wall -Wextra -pedantic -Werror --std=c++17 -g
-
+CCFLAGS =  --std=c++17 -g
+#-Wall -Wextra -pedantic -Werror
 .cpp.o:
 	$(CXX) $(CCFLAGS) -c -O3 $<
 
-all: BGL_Dijkstra clean
+all: BGL_Dijkstra #clean
 
 BGL_Dijkstra: BGL_Dijkstra.o workloads.o BBO_graph_creator.o
 	$(CXX) $(CCFLAGS) -o test1 workloads.o BGL_Dijkstra.o BBO_graph_creator.o
