@@ -727,116 +727,6 @@ bool test_DOTA(bool TEST_DEBUG){
 }
 
 
-bool test1Parallel (bool TEST_DEBUG, int num_threads)
-{
-	if (TEST_DEBUG) std::cout<<"testing Test1 in parallel"<<std::endl;
-	const int num_nodes = 5;
-	enum nodes { A, B, C, D, E };
-	//char name[] = "ABCDE";
-	Edge edge_array[] = { 
-			Edge(A, B), Edge(A, C), Edge(A, D), 
-			Edge(B, A), Edge(B, D), Edge(B, E), 
-			Edge(C, A), Edge(C, D), 
-			Edge(D, A), Edge(D, B), Edge(D, C), Edge(D, E), 
-			Edge(E, B), Edge(E, D)
-	};
-	int weights[] = { 
-		12, 2, 10, 
-		12, 3, 1, 
-		2, 4,
-		10, 3, 4, 5,
-		1, 5
-	};
-	int num_arcs = sizeof(edge_array) / sizeof(Edge);
-
-	//the graph
-	graph_t g(edge_array, edge_array + num_arcs, weights, num_nodes);
-
-	// Keeps track of the predecessor of each vertex
-	predecessor_map_t p;
-	
-
-	// Keeps track of the distance to each vertex
-	std::vector<int> d(num_vertices(g));
-
-
-
-	// test1a, with source A.
-	vertex_descriptor s = vertex(A, g);
-
-	auto distances = parallel_dijkstra(g, s, p, num_threads);
-
-	vector<int> true_distances = {0,9,2,6,10};
-	
-	//this needs to iterate thru the vectors
-
-	if (TEST_DEBUG) cout << "test1a\n" << print_dijkstra_results(g,distances);
-	for (int i = 0; i < 5; i++)
-	{
-		if (distances[vertex(i, g)] != true_distances[i]){
-			return false;
-		}
-	}
-	
-	//test1b with source B
-	s = vertex(B, g);
-	distances = parallel_dijkstra(g, s, p, num_threads);
-
-	true_distances = {9,0,7,3,1};
-	for (int i = 0; i < 5; i++)
-	{
-		if (distances[vertex(i,g)] != true_distances[i]){
-			return false;
-		}
-	}
-	if (TEST_DEBUG) cout << "test1b\n" << print_dijkstra_results(g,distances);
-
-
-	//test1c with source C
-	s = vertex(C, g);
-	distances = parallel_dijkstra(g, s, p, num_threads);
-
-	true_distances = {2,7,0,4,8};
-	for (int i = 0; i < 5; i++)
-	{
-		if (distances[vertex(i,g)] != true_distances[i]){
-			return false;
-		}
-	}
-	if (TEST_DEBUG) cout << "test1c\n" << print_dijkstra_results(g,distances);
-
-
-
-	//test1d with source D
-	s = vertex(D, g);
-	distances = parallel_dijkstra(g, s, p, num_threads);
-
-	true_distances = {6,3,4,0,4};
-	for (int i = 0; i < 5; i++)
-	{
-		if (distances[vertex(i,g)] != true_distances[i]){
-			return false;
-		}
-	}
-	if (TEST_DEBUG) cout << "test1d\n" << print_dijkstra_results(g,distances);
-
-	//test1e with source E
-	s = vertex(E, g);
-	distances = parallel_dijkstra(g, s, p, num_threads);
-
-	true_distances = {10,1,8,4,0};
-	for (int i = 0; i < 5; i++)
-	{
-		if (distances[vertex(i,g)] != true_distances[i]){
-			return false;
-		}
-	}
-	if (TEST_DEBUG) cout << "test1e\n" << print_dijkstra_results(g,distances);
-
-
-
-	return true;
-}
 
 int main()
 {
@@ -897,15 +787,7 @@ int main()
 		test6(true);
 	}
 
-	if(test1Parallel(false,1))
-	{
-		cout<<"test1Parallel passed"<<endl;
-	} else {
-		cout<<"test1Parallel failed!!"<<endl;
-		test1Parallel(true,1);
-	}
-
-	if(test_DOTA(false)) 
+	if(test_DOTA(true)) 
 	{
 		cout<<"test_DOTA passed"<<endl;
 	} else {
