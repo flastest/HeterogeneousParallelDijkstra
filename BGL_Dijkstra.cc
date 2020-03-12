@@ -4,7 +4,7 @@ using namespace std;
 using namespace boost;
 
 
-bool DEBUG = true;
+bool DEBUG = false;
 
 
 
@@ -196,6 +196,9 @@ std::mutex pq_mutex;
 //global mutex for the pq of offers
 
 
+//need a global mutex for done
+std::mutex done_mutex;
+
 //need an offer type
 //contains a vertex and the offer's respective shortest distance
 using offer_t = std::pair<vertex_descriptor, float>;
@@ -283,6 +286,7 @@ distance_map_t initialize_distances_from_source_and_mutex_maps(
 	{
 		vertex_descriptor current_vertex = vertex(i,graph);
 		distances[current_vertex] = INFINITY;
+		if (DEBUG) std::cout<<"i bet that infinity is a really big negative. it is "<< INFINITY <<std::endl;
 		distance_mutexes[current_vertex] = mutex_ptr(new std::mutex);
 		predecessor_mutexes[current_vertex] = mutex_ptr(new std::mutex);
 	}
@@ -308,26 +312,36 @@ void parallel_dijkstra_thread(vector<bool>& done,
 					const graph_t& graph)
 {
 
+	if (DEBUG) std::cout<<"starting a thread" <<std::endl;
 	const auto weight = get(edge_weight, graph);
+	if (DEBUG) std::cout<< "is thread done? it shouldn't be. This should be true " <<!done[thread_id]<<std::endl;
 	while(!done[thread_id])
 	{
-		
+		if (DEBUG) std::cout <<"this thread isn't done yet" <<std::endl;
+		if (DEBUG) std::cout <<"is the offer_pq empty? 1 for yes, 0 for no: " <<offer_pq.empty()<<std::endl;
 		if(!offer_pq.empty())
 		{
+			if(DEBUG) std::cout<<"the offer pq isn't empty."<<std::endl;
+
 			offer_t offer;
 			{
 				std::lock_guard<std::mutex> guard(pq_mutex);
+
 				offer = offer_pq.top();
 				offer_pq.pop();
 			}
 
+			if (DEBUG) std::cout<< "we've obtained offer"<<std::endl; 
 			const auto vertex = offer.first;
 			const auto offer_distance = offer.second;
 			bool explore = false;
 
+			if (DEBUG) std::cout<<"offer distance is "<<offer_distance<<std::endl;
+
 			{
 				std::lock_guard<std::mutex> guard(*distance_mutexes[vertex]);
 
+				if(DEBUG) std::cout<<"offer distance is "<<offer_distance <<" and distances[vertex] is "<<distances[vertex] <<std::endl;
 				if(offer_distance < distances[vertex])
 				{
 					if (DEBUG) std::cout <<"updating distances of " <<vertex<< " to offer_distance" <<std::endl;
@@ -368,11 +382,24 @@ void parallel_dijkstra_thread(vector<bool>& done,
 		}
 		else // priority  queue is empty
 		{
+			std::lock_guard<std::mutex> guard(done_mutex);
+			if(DEBUG) std::cout<< "this thread is done!" <<std::endl;
 			done[thread_id] = true;
+
+			if (DEBUG)
+			{
+				std::cout << "length of done is "<<done.size()<<std::endl;
+				std::cout << "done[0] is "<<done[0]<<std::endl;
+				std::cout <<"thread id is" <<thread_id<<std::endl;
+			}
+
+			//oh god, ok, if they're not all done the thread isn't done.
 			if (!std::all_of(done.cbegin(), done.cend(),
 				[](const bool& done){ return done; })) {
+				if (DEBUG) std::cout<<"ok there are more things to do, this thread isn't done"<<std::endl;
 				done[thread_id] = false;
 			}
+			else break;
 		}
 	}
 }
@@ -396,7 +423,7 @@ distance_map_t parallel_dijkstra(const graph_t &graph,
 	mutex_map_t predecessor_mutexes;
 
 	//this keeps track of the threads that are done
-	vector<bool> done(NUM_THREADS, true); 
+	vector<bool> done(NUM_THREADS, false); 
 
 	distance_map_t distances = initialize_distances_from_source_and_mutex_maps(graph, distance_mutexes, predecessor_mutexes);
 
@@ -414,15 +441,17 @@ distance_map_t parallel_dijkstra(const graph_t &graph,
 	auto [start, finish] = out_edges(source,graph);
 	for(;start != finish; start++)
 	{
+		if (DEBUG) std::cout << "adding an offer from source to "<<target(*start,graph)<<" of distance "<<get(weight, *start)<<std::endl;
 		offer_t offer(target(*start,graph),get(weight, *start));
+		offer_pq.push(offer);
 	}
 
 
 	//ok now all the threads gotta do their things. 
-	for (int thread_id = 0; thread_id < NUM_THREADS; thread_id++)
+	for (int thread_id = 0; thread_id < NUM_THREADS;)
 	{
 		threads.push_back(
-			std::thread([&](){
+			std::thread([&, thread_id](){
 				parallel_dijkstra_thread(
 					done,
 					thread_id,
@@ -432,6 +461,7 @@ distance_map_t parallel_dijkstra(const graph_t &graph,
 					predecessor_mutexes,
 					predecessors,
 					graph);}));
+		thread_id++;
 	}
 
 	//join threads!
