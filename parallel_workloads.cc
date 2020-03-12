@@ -731,7 +731,7 @@ bool test_DOTA(bool TEST_DEBUG, int num_threads){
 
 int main()
 {
-	int num_threads = 1;
+	int num_threads = 2;
 	if(test1(false,num_threads)) 
 	{
 		cout<<"test1 passed"<<endl;
