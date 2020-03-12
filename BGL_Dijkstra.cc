@@ -4,7 +4,7 @@ using namespace std;
 using namespace boost;
 
 
-bool DEBUG = false;
+bool DEBUG = true;
 
 
 
@@ -14,15 +14,14 @@ Dijkstra's algorithm making use of BGL's adjacency table and BGL's priority_queu
 Eric taught me that for every line of code, there should be seven lines of 
 comments, so that's what I'm aiming to do. 
 
+1. bigger workloads, big, 1000 workload synthetic, same results as BGL
+		no dota yet, cut it to 100k or something
 
-
-
-
-
-test the hell out of it,
-1.	https://github.com/graphbig/graphBIG/blob/master/benchmark/bench_shortestPath/sssp.cpp
-	workloads
-2.	lums@cs.indiana.edu
+once that's correct, take a biggish graph, couple minutes
+chart like hw0, x axis number threads
+ y axis time to completion
+ see how it scales
+ find minimum
 
 
 
@@ -382,7 +381,7 @@ void parallel_dijkstra_thread(vector<bool>& done,
 		}
 		else // priority  queue is empty
 		{
-			std::lock_guard<std::mutex> guard(done_mutex);
+
 			if(DEBUG) std::cout<< "this thread is done!" <<std::endl;
 			done[thread_id] = true;
 
@@ -393,13 +392,16 @@ void parallel_dijkstra_thread(vector<bool>& done,
 				std::cout <<"thread id is" <<thread_id<<std::endl;
 			}
 
-			//oh god, ok, if they're not all done the thread isn't done.
-			if (!std::all_of(done.cbegin(), done.cend(),
-				[](const bool& done){ return done; })) {
-				if (DEBUG) std::cout<<"ok there are more things to do, this thread isn't done"<<std::endl;
-				done[thread_id] = false;
+			int i = 0 ;
+			while(done[i] && i < done.size()) 
+			{
+				i++;
 			}
-			else break;
+			if(i == done.size())
+			{
+				return;
+			}
+			done[thread_id] = false;
 		}
 	}
 }
