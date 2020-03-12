@@ -33,7 +33,7 @@ using predecessor_map_t = map<vertex_descriptor,vertex_descriptor>;
 // here are the different dijkstra algos you can use here:
 //	dijkstra_shortest_paths_swag_version
 //	parallel_dijkstra
-auto dijkstra_algorithm = dijkstra_shortest_paths_swag_version;
+auto dijkstra_algorithm = parallel_dijkstra;
 
 
 //iterate through all of the vertices and print them
@@ -64,7 +64,7 @@ string print_dijkstra_results(graph_t g, distance_map_t distances)
 //   C--4-D
 //  
 // it will test each node as a source. 
-bool test1 (bool TEST_DEBUG)
+bool test1 (bool TEST_DEBUG, int num_threads)
 {
 	const int num_nodes = 5;
 	enum nodes { A, B, C, D, E };
@@ -100,7 +100,7 @@ bool test1 (bool TEST_DEBUG)
 	// test1a, with source A.
 	vertex_descriptor s = vertex(A, g);
 
-	auto distances = dijkstra_algorithm(g, s, p);
+	auto distances = dijkstra_algorithm(g, s, p, num_threads);
 
 	vector<int> true_distances = {0,9,2,6,10};
 	
@@ -116,7 +116,7 @@ bool test1 (bool TEST_DEBUG)
 
 	//test1b with source B
 	s = vertex(B, g);
-	distances = dijkstra_algorithm(g, s, p);
+	distances = dijkstra_algorithm(g, s, p, num_threads);
 
 	true_distances = {9,0,7,3,1};
 	for (int i = 0; i < 5; i++)
@@ -130,7 +130,7 @@ bool test1 (bool TEST_DEBUG)
 
 	//test1c with source C
 	s = vertex(C, g);
-	distances = dijkstra_algorithm(g, s, p);
+	distances = dijkstra_algorithm(g, s, p, num_threads);
 
 	true_distances = {2,7,0,4,8};
 	for (int i = 0; i < 5; i++)
@@ -145,7 +145,7 @@ bool test1 (bool TEST_DEBUG)
 
 	//test1d with source D
 	s = vertex(D, g);
-	distances = dijkstra_algorithm(g, s, p);
+	distances = dijkstra_algorithm(g, s, p, num_threads);
 
 	true_distances = {6,3,4,0,4};
 	for (int i = 0; i < 5; i++)
@@ -158,7 +158,7 @@ bool test1 (bool TEST_DEBUG)
 
 	//test1e with source E
 	s = vertex(E, g);
-	distances = dijkstra_algorithm(g, s, p);
+	distances = dijkstra_algorithm(g, s, p, num_threads);
 
 	true_distances = {10,1,8,4,0};
 	for (int i = 0; i < 5; i++)
@@ -181,7 +181,7 @@ bool test1 (bool TEST_DEBUG)
 //  3\ /2
 //    C
 //
-bool test2(bool TEST_DEBUG)
+bool test2(bool TEST_DEBUG, int num_threads)
 {
 	const int num_nodes = 3;
 	enum nodes { A, B, C };
@@ -211,7 +211,7 @@ bool test2(bool TEST_DEBUG)
 	// test2a, with source A.
 	vertex_descriptor s = vertex(A, g);
 
-	auto distances = dijkstra_algorithm(g, s, p);
+	auto distances = dijkstra_algorithm(g, s, p, num_threads);
 
 	vector<int> true_distances = {0, 0, 2};
 	if (TEST_DEBUG) cout << "test2a\n" << print_dijkstra_results(g,distances);
@@ -227,7 +227,7 @@ bool test2(bool TEST_DEBUG)
 	// test2b, with source B.
 	s = vertex(B, g);
 
-	distances = dijkstra_algorithm(g, s, p);
+	distances = dijkstra_algorithm(g, s, p, num_threads);
 
 	true_distances = {0, 0, 2};
 	if (TEST_DEBUG) cout << "test2b\n" << print_dijkstra_results(g,distances);
@@ -242,7 +242,7 @@ bool test2(bool TEST_DEBUG)
 	// test2c, with source C.
 	s = vertex(C, g);
 
-	distances = dijkstra_algorithm(g, s, p);
+	distances = dijkstra_algorithm(g, s, p, num_threads);
 
 	true_distances = {2, 2, 0};
 	if (TEST_DEBUG) cout << "test2c\n" << print_dijkstra_results(g,distances);
@@ -263,7 +263,7 @@ bool test2(bool TEST_DEBUG)
 //  3\ /2
 //    C
 //
-bool test2i(bool TEST_DEBUG)
+bool test2i(bool TEST_DEBUG, int num_threads)
 {
 	const int num_nodes = 3;
 	enum nodes { A, B, C };
@@ -293,7 +293,7 @@ bool test2i(bool TEST_DEBUG)
 	// test2a, with source A.
 	vertex_descriptor s = vertex(A, g);
 
-	auto distances = dijkstra_algorithm(g, s, p);
+	auto distances = dijkstra_algorithm(g, s, p, num_threads);
 
 	vector<int> true_distances = {0, 1, 3};
 	if (TEST_DEBUG) cout << "test2a\n" << print_dijkstra_results(g,distances);
@@ -309,7 +309,7 @@ bool test2i(bool TEST_DEBUG)
 	// test2b, with source B.
 	s = vertex(B, g);
 
-	distances = dijkstra_algorithm(g, s, p);
+	distances = dijkstra_algorithm(g, s, p, num_threads);
 
 	true_distances = {1, 0, 2};
 	if (TEST_DEBUG) cout << "test2b\n" << print_dijkstra_results(g,distances);
@@ -324,7 +324,7 @@ bool test2i(bool TEST_DEBUG)
 	// test2c, with source C.
 	s = vertex(C, g);
 
-	distances = dijkstra_algorithm(g, s, p);
+	distances = dijkstra_algorithm(g, s, p, num_threads);
 
 	true_distances = {3, 2, 0};
 	if (TEST_DEBUG) cout << "test2c\n" << print_dijkstra_results(g,distances);
@@ -347,7 +347,7 @@ bool test2i(bool TEST_DEBUG)
 //    C--D
 //     2 
 //
-bool test3(bool TEST_DEBUG)
+bool test3(bool TEST_DEBUG, int num_threads)
 {
 	const int num_nodes = 5;
 	enum nodes { A, B, C, D, E };
@@ -380,7 +380,7 @@ bool test3(bool TEST_DEBUG)
 	// test3a, with source A.
 	vertex_descriptor s = vertex(A, g);
 
-	auto distances = dijkstra_algorithm(g, s, p);
+	auto distances = dijkstra_algorithm(g, s, p, num_threads);
 
 	vector<float> true_distances = {0, 2, 2, 4, INFINITY};
 	if (TEST_DEBUG) cout << "test3a\n" << print_dijkstra_results(g,distances);
@@ -396,7 +396,7 @@ bool test3(bool TEST_DEBUG)
 	// test3b, with source B.
 	s = vertex(B, g);
 
-	distances = dijkstra_algorithm(g, s, p);
+	distances = dijkstra_algorithm(g, s, p, num_threads);
 
 	true_distances = {2, 0, 4, 2, INFINITY};
 	if (TEST_DEBUG) cout << "test3b\n" << print_dijkstra_results(g,distances);
@@ -411,7 +411,7 @@ bool test3(bool TEST_DEBUG)
 	// test3c, with source C.
 	s = vertex(C, g);
 
-	distances = dijkstra_algorithm(g, s, p);
+	distances = dijkstra_algorithm(g, s, p, num_threads);
 
 	true_distances = {2, 4, 0, 2, INFINITY};
 	if (TEST_DEBUG) cout << "test3c\n" << print_dijkstra_results(g,distances);
@@ -427,7 +427,7 @@ bool test3(bool TEST_DEBUG)
 	// test3d, with source D.
 	s = vertex(D, g);
 
-	distances = dijkstra_algorithm(g, s, p);
+	distances = dijkstra_algorithm(g, s, p, num_threads);
 
 	true_distances = {4, 2, 2, 0, INFINITY};
 	if (TEST_DEBUG) cout << "test3d\n" << print_dijkstra_results(g,distances);
@@ -442,7 +442,7 @@ bool test3(bool TEST_DEBUG)
 	// test3e, with source E.
 	s = vertex(E, g);
 
-	distances = dijkstra_algorithm(g, s, p);
+	distances = dijkstra_algorithm(g, s, p, num_threads);
 
 	true_distances = {4, 2, 6, 4, 0};
 	if (TEST_DEBUG) cout << "test3c\n" << print_dijkstra_results(g,distances);
@@ -461,7 +461,7 @@ bool test3(bool TEST_DEBUG)
 //
 // A -2-> B -3-> C
 //
-bool test4(bool TEST_DEBUG)
+bool test4(bool TEST_DEBUG, int num_threads)
 {
 	const int num_nodes = 3;
 	enum nodes { A, B, C};
@@ -487,7 +487,7 @@ bool test4(bool TEST_DEBUG)
 	// test4a, with source A.
 	vertex_descriptor s = vertex(A, g);
 
-	auto distances = dijkstra_algorithm(g, s, p);
+	auto distances = dijkstra_algorithm(g, s, p, num_threads);
 
 	vector<float> true_distances = { 0, 2, 5};
 	if (TEST_DEBUG) cout << "test4a\n" << print_dijkstra_results(g,distances);
@@ -501,7 +501,7 @@ bool test4(bool TEST_DEBUG)
 	// test4b, with source B.
 	s = vertex(B, g);
 
-	distances = dijkstra_algorithm(g, s, p);
+	distances = dijkstra_algorithm(g, s, p, num_threads);
 
 	true_distances = {INFINITY, 0, 3};
 	if (TEST_DEBUG) cout << "test4b\n" << print_dijkstra_results(g,distances);
@@ -516,7 +516,7 @@ bool test4(bool TEST_DEBUG)
 	// test4c, with source C.
 	s = vertex(C, g);
 
-	distances = dijkstra_algorithm(g, s, p);
+	distances = dijkstra_algorithm(g, s, p, num_threads);
 
 	true_distances = {INFINITY, INFINITY, 0};
 	if (TEST_DEBUG) cout << "test4c\n" << print_dijkstra_results(g,distances);
@@ -536,7 +536,7 @@ bool test4(bool TEST_DEBUG)
 //      .-, 1
 //  A-1->B-'
 //    
-bool test5(bool TEST_DEBUG)
+bool test5(bool TEST_DEBUG, int num_threads)
 {
 	const int num_nodes = 2;
 	enum nodes { A, B };
@@ -562,7 +562,7 @@ bool test5(bool TEST_DEBUG)
 	// test5a, with source A.
 	vertex_descriptor s = vertex(A, g);
 
-	auto distances = dijkstra_algorithm(g, s, p);
+	auto distances = dijkstra_algorithm(g, s, p, num_threads);
 
 	vector<float> true_distances = { 0, 1};
 	if (TEST_DEBUG) cout << "test5a\n" << print_dijkstra_results(g,distances);
@@ -576,7 +576,7 @@ bool test5(bool TEST_DEBUG)
 	// test5b, with source B.
 	s = vertex(B, g);
 
-	distances = dijkstra_algorithm(g, s, p);
+	distances = dijkstra_algorithm(g, s, p, num_threads);
 
 	true_distances = {INFINITY, 0};
 	if (TEST_DEBUG) cout << "test5b\n" << print_dijkstra_results(g,distances);
@@ -596,7 +596,7 @@ bool test5(bool TEST_DEBUG)
 //        ^     /
 //         `-2-'
 //
-bool test6(bool TEST_DEBUG)
+bool test6(bool TEST_DEBUG, int num_threads)
 {
 	const int num_nodes = 3;
 	enum nodes { A, B, C};
@@ -623,7 +623,7 @@ bool test6(bool TEST_DEBUG)
 	// test6a, with source A.
 	vertex_descriptor s = vertex(A, g);
 
-	auto distances = dijkstra_algorithm(g, s, p);
+	auto distances = dijkstra_algorithm(g, s, p, num_threads);
 
 	vector<float> true_distances = { 0, 2, 5};
 	if (TEST_DEBUG) cout << "test6a\n" << print_dijkstra_results(g,distances);
@@ -637,7 +637,7 @@ bool test6(bool TEST_DEBUG)
 	// test6b, with source B.
 	s = vertex(B, g);
 
-	distances = dijkstra_algorithm(g, s, p);
+	distances = dijkstra_algorithm(g, s, p, num_threads);
 
 	true_distances = {INFINITY, 0, 3};
 	if (TEST_DEBUG) cout << "test6b\n" << print_dijkstra_results(g,distances);
@@ -652,7 +652,7 @@ bool test6(bool TEST_DEBUG)
 	// test6c, with source C.
 	s = vertex(C, g);
 
-	distances = dijkstra_algorithm(g, s, p);
+	distances = dijkstra_algorithm(g, s, p, num_threads);
 
 	true_distances = {INFINITY, 2, 0};
 	if (TEST_DEBUG) cout << "test6c\n" << print_dijkstra_results(g,distances);
@@ -701,11 +701,11 @@ std::vector<int> testBGL (graph_t g, vertex_descriptor s, std::vector<vertex_des
 }
 
 
-float timed_dijkstra(graph_t g, vertex_descriptor s)
+float timed_dijkstra(graph_t g, vertex_descriptor s, int num_threads)
 {
 	predecessor_map_t p;
 	auto startTime = chrono::high_resolution_clock::now();
-	auto distances = dijkstra_algorithm(g, s, p);
+	auto distances = dijkstra_algorithm(g, s, p, num_threads);
 	auto endTime = chrono::high_resolution_clock::now();
 
 	float t = chrono::duration_cast<std::chrono::microseconds>( endTime - startTime ).count();
@@ -716,201 +716,84 @@ float timed_dijkstra(graph_t g, vertex_descriptor s)
 
 
 
-bool test_DOTA(bool TEST_DEBUG){
+bool test_DOTA(bool TEST_DEBUG, int num_threads){
 	//aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaah
 	if (TEST_DEBUG) std::cout<<"loading graph from BBO"<<std::endl;
 	graph_t g = graph_from_file("DotaLeague/DotaLeague_Edge_Basic");
-
-
-
-	return true;
-}
-
-
-bool test1Parallel (bool TEST_DEBUG, int num_threads)
-{
-	if (TEST_DEBUG) std::cout<<"testing Test1 in parallel"<<std::endl;
-	const int num_nodes = 5;
-	enum nodes { A, B, C, D, E };
-	//char name[] = "ABCDE";
-	Edge edge_array[] = { 
-			Edge(A, B), Edge(A, C), Edge(A, D), 
-			Edge(B, A), Edge(B, D), Edge(B, E), 
-			Edge(C, A), Edge(C, D), 
-			Edge(D, A), Edge(D, B), Edge(D, C), Edge(D, E), 
-			Edge(E, B), Edge(E, D)
-	};
-	int weights[] = { 
-		12, 2, 10, 
-		12, 3, 1, 
-		2, 4,
-		10, 3, 4, 5,
-		1, 5
-	};
-	int num_arcs = sizeof(edge_array) / sizeof(Edge);
-
-	//the graph
-	graph_t g(edge_array, edge_array + num_arcs, weights, num_nodes);
-
-	// Keeps track of the predecessor of each vertex
-	predecessor_map_t p;
-	
-
-	// Keeps track of the distance to each vertex
-	std::vector<int> d(num_vertices(g));
-
-
-
-	// test1a, with source A.
-	vertex_descriptor s = vertex(A, g);
-
-	auto distances = parallel_dijkstra(g, s, p, num_threads);
-
-	vector<int> true_distances = {0,9,2,6,10};
-	
-	//this needs to iterate thru the vectors
-
-	if (TEST_DEBUG) cout << "test1a\n" << print_dijkstra_results(g,distances);
-	for (int i = 0; i < 5; i++)
-	{
-		if (distances[vertex(i, g)] != true_distances[i]){
-			return false;
-		}
-	}
-	
-	//test1b with source B
-	s = vertex(B, g);
-	distances = parallel_dijkstra(g, s, p, num_threads);
-
-	true_distances = {9,0,7,3,1};
-	for (int i = 0; i < 5; i++)
-	{
-		if (distances[vertex(i,g)] != true_distances[i]){
-			return false;
-		}
-	}
-	if (TEST_DEBUG) cout << "test1b\n" << print_dijkstra_results(g,distances);
-
-
-	//test1c with source C
-	s = vertex(C, g);
-	distances = parallel_dijkstra(g, s, p, num_threads);
-
-	true_distances = {2,7,0,4,8};
-	for (int i = 0; i < 5; i++)
-	{
-		if (distances[vertex(i,g)] != true_distances[i]){
-			return false;
-		}
-	}
-	if (TEST_DEBUG) cout << "test1c\n" << print_dijkstra_results(g,distances);
-
-
-
-	//test1d with source D
-	s = vertex(D, g);
-	distances = parallel_dijkstra(g, s, p, num_threads);
-
-	true_distances = {6,3,4,0,4};
-	for (int i = 0; i < 5; i++)
-	{
-		if (distances[vertex(i,g)] != true_distances[i]){
-			return false;
-		}
-	}
-	if (TEST_DEBUG) cout << "test1d\n" << print_dijkstra_results(g,distances);
-
-	//test1e with source E
-	s = vertex(E, g);
-	distances = parallel_dijkstra(g, s, p, num_threads);
-
-	true_distances = {10,1,8,4,0};
-	for (int i = 0; i < 5; i++)
-	{
-		if (distances[vertex(i,g)] != true_distances[i]){
-			return false;
-		}
-	}
-	if (TEST_DEBUG) cout << "test1e\n" << print_dijkstra_results(g,distances);
-
+	(void) num_threads;
 
 
 	return true;
 }
+
+
+
 
 int main()
 {
-
-	if(test1(false)) 
+	int num_threads = 1;
+	if(test1(false,num_threads)) 
 	{
 		cout<<"test1 passed"<<endl;
 	} else {
 		cout<<"test1 failed!!"<<endl;
-		test1(true);
+		test1(true,num_threads);
 	}
 
-	if(test2(false)) 
+	if(test2(false,num_threads)) 
 	{
 		cout<<"test2 passed"<<endl;
 	} else {
 		cout<<"test2 failed!!"<<endl;
-		test2(true);
+		test2(true,num_threads);
 	}
 
-	if(test2i(false)) 
+	if(test2i(false,num_threads)) 
 	{
 		cout<<"test2i passed"<<endl;
 	} else {
 		cout<<"test2i failed!!"<<endl;
-		test2i(true);
+		test2i(true,num_threads);
 	}
 
-	if(test3(false)) 
+	if(test3(false,num_threads)) 
 	{
 		cout<<"test3 passed"<<endl;
 	} else {
 		cout<<"test3 failed!!"<<endl;
-		test3(true);
+		test3(true,num_threads);
 	}
 
-	if(test4(false)) 
+	if(test4(false,num_threads)) 
 	{
 		cout<<"test4 passed"<<endl;
 	} else {
 		cout<<"test4 failed!!"<<endl;
-		test4(true);
+		test4(true,num_threads);
 	}
 
-	if(test5(false)) 
+	if(test5(false,num_threads)) 
 	{
 		cout<<"test5 passed"<<endl;
 	} else {
 		cout<<"test5 failed!!"<<endl;
-		test5(true);
+		test5(true,num_threads);
 	}
 
-	if(test6(false)) 
+	if(test6(false,num_threads)) 
 	{
 		cout<<"test6 passed"<<endl;
 	} else {
 		cout<<"test6 failed!!"<<endl;
-		test6(true);
+		test6(true,num_threads);
 	}
 
-	if(test1Parallel(false,1))
-	{
-		cout<<"test1Parallel passed"<<endl;
-	} else {
-		cout<<"test1Parallel failed!!"<<endl;
-		test1Parallel(true,1);
-	}
-
-	if(test_DOTA(false)) 
+	if(test_DOTA(false,num_threads)) 
 	{
 		cout<<"test_DOTA passed"<<endl;
 	} else {
 		cout<<"test_DOTA failed!!"<<endl;
-		test_DOTA(true);
+		test_DOTA(true,num_threads);
 	}
 
 	return 0;
