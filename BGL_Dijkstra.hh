@@ -52,7 +52,10 @@ distance_map_t dijkstra_shortest_paths_swag_version(
 
 
 
-
+distance_map_t parallel_dijkstra(const graph_t &graph, 
+						const vertex_descriptor &source, 
+						predecessor_map_t &predecessors,
+						int NUM_THREADS);
 
 
 

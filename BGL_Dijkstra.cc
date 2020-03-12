@@ -4,7 +4,7 @@ using namespace std;
 using namespace boost;
 
 
-bool DEBUG = false;
+bool DEBUG = true;
 
 
 
@@ -330,6 +330,7 @@ void parallel_dijkstra_thread(vector<bool>& done,
 
 				if(offer_distance < distances[vertex])
 				{
+					if (DEBUG) std::cout <<"updating distances of " <<vertex<< " to offer_distance" <<std::endl;
 					distances[vertex] = offer_distance;
 					explore = true;
 				}
@@ -433,7 +434,11 @@ distance_map_t parallel_dijkstra(const graph_t &graph,
 					graph);}));
 	}
 
-	//do I need to join the threads here?
+	//join threads!
+	for(int thread = 0; thread < NUM_THREADS; thread++)
+	{
+		threads[thread].join();
+	}
 
 	return distances;
 }
