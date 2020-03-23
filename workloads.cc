@@ -55,6 +55,29 @@ string print_dijkstra_results(graph_t g, distance_map_t distances)
 	return results;
 }
 
+//tests a graph with the BGL
+//takes inputs of a graph, a source node, and a reference to a vector which will contain predecessors
+//returns all of the distances as a vector. I guess each index corresponds to a vertex descriptor
+std::vector<int> testBGL (graph_t g, vertex_descriptor s, std::vector<vertex_descriptor> &p)
+{
+	
+	// Keeps track of the predecessor of each vertex
+	//std::vector<vertex_descriptor> p(num_vertices(g));
+	// Keeps track of the distance to each vertex
+	std::vector<int> d(num_vertices(g));
+
+
+
+	boost::dijkstra_shortest_paths(g, s,
+		predecessor_map(
+	     make_iterator_property_map(p.begin(), get(vertex_index, g))).
+	   distance_map(
+	     make_iterator_property_map(d.begin(), get(vertex_index, g)))
+	   );
+	
+	return d;
+}
+
 //this is a bidirectional graph
 //
 //   A-12-B-1-E
@@ -102,7 +125,10 @@ bool test1 (bool TEST_DEBUG)
 
 	auto distances = dijkstra_algorithm(g, s, p);
 
-	vector<int> true_distances = {0,9,2,6,10};
+
+	std::vector<vertex_descriptor> p_BGL(num_nodes);
+
+	vector<int> true_distances = testBGL ( g,  s, p_BGL);
 	
 	//this needs to iterate thru the vectors
 
@@ -118,7 +144,7 @@ bool test1 (bool TEST_DEBUG)
 	s = vertex(B, g);
 	distances = dijkstra_algorithm(g, s, p);
 
-	true_distances = {9,0,7,3,1};
+	true_distances = testBGL ( g,  s, p_BGL);;
 	for (int i = 0; i < 5; i++)
 	{
 		if (distances[vertex(i,g)] != true_distances[i]){
@@ -132,7 +158,7 @@ bool test1 (bool TEST_DEBUG)
 	s = vertex(C, g);
 	distances = dijkstra_algorithm(g, s, p);
 
-	true_distances = {2,7,0,4,8};
+	true_distances = testBGL ( g,  s, p_BGL);;
 	for (int i = 0; i < 5; i++)
 	{
 		if (distances[vertex(i,g)] != true_distances[i]){
@@ -147,7 +173,7 @@ bool test1 (bool TEST_DEBUG)
 	s = vertex(D, g);
 	distances = dijkstra_algorithm(g, s, p);
 
-	true_distances = {6,3,4,0,4};
+	true_distances = testBGL ( g,  s, p_BGL);;
 	for (int i = 0; i < 5; i++)
 	{
 		if (distances[vertex(i,g)] != true_distances[i]){
@@ -677,28 +703,6 @@ bool test6(bool TEST_DEBUG)
 //  
 
 
-//tests a graph with the BGL
-//takes inputs of a graph, a source node, and a reference to a vector which will contain predecessors
-//returns all of the distances as a vector. I guess each index corresponds to a vertex descriptor
-std::vector<int> testBGL (graph_t g, vertex_descriptor s, std::vector<vertex_descriptor> &p)
-{
-	
-	// Keeps track of the predecessor of each vertex
-	//std::vector<vertex_descriptor> p(num_vertices(g));
-	// Keeps track of the distance to each vertex
-	std::vector<int> d(num_vertices(g));
-
-
-
-	boost::dijkstra_shortest_paths(g, s,
-		predecessor_map(
-	     make_iterator_property_map(p.begin(), get(vertex_index, g))).
-	   distance_map(
-	     make_iterator_property_map(d.begin(), get(vertex_index, g)))
-	   );
-	
-	return d;
-}
 
 
 float timed_dijkstra(graph_t g, vertex_descriptor s)
@@ -719,8 +723,18 @@ float timed_dijkstra(graph_t g, vertex_descriptor s)
 bool test_DOTA(bool TEST_DEBUG){
 	//aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaah
 	if (TEST_DEBUG) std::cout<<"loading graph from BBO"<<std::endl;
-	graph_t g = graph_from_file("DotaLeague/DotaLeague_Edge_Basic");
+	graph_t g = graph_from_file("DotaLeague/DotaLeague_Edge_Basic",true);
 
+
+	//number of nodes in g
+	int num_nodes = num_vertices(g);
+
+	std::vector<vertex_descriptor> p(num_nodes);
+
+	//get a source node...
+	vertex_descriptor s = vertex(1, g);
+
+	std::vector<int> BGL_results = testBGL ( g,  s, p);
 
 
 	return true;
