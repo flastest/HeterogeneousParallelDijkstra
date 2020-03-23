@@ -21,4 +21,6 @@ typedef std::pair<int, int> Edge;
 
 std::vector<int> get_teammates (std::string team_list);
 
-graph_t graph_from_file(std::string name);
+graph_t graph_from_file(std::string name, bool truncate_early = false);
+
+graph_t cit_graph_from_file(std::string name, bool truncate_early = false);

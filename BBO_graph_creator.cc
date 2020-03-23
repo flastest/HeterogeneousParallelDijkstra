@@ -5,6 +5,8 @@
 using namespace boost;
 
 bool DEBUG_LOGS = false;
+bool MINIMAL_DEBUG = false || DEBUG_LOGS;
+
 
 //https://www.boost.org/doc/libs/1_65_1/libs/graph_parallel/doc/html/dijkstra_example.html
 typedef adjacency_list<listS, vecS, directedS,
@@ -22,7 +24,7 @@ typedef std::pair<int, int> Edge;
 //given a string with slashes in it, assembles a vector of individual ids.
 std::vector<int> get_teammates (std::string team_list)
 {
-	if (DEBUG_LOGS) std::cout<<"getting teammates from "<<team_list<<std::endl;
+	if (MINIMAL_DEBUG) std::cout<<"getting teammates from "<<team_list<<std::endl;
 
 	std::vector<int> teammates;
 
@@ -68,8 +70,11 @@ std::string remove_a_comma (std::string str)
 //try with DotaLeague/DotaLeague_Edge_Basic or
 //my favorite:
 // BBO/BBO_Edge_Basic!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-graph_t graph_from_file(std::string name)
+graph_t graph_from_file(std::string name, bool truncate_early)
 {
+
+	int counter = 1000;
+
 	std::ifstream infile(name);
 
 	int biggest_player_id = 0;
@@ -82,7 +87,12 @@ graph_t graph_from_file(std::string name)
 
 	while (std::getline(infile,input))// >> ", 0," >>team_a>>", 0,">>team_b>>", 0")
 	{
+		if(truncate_early && counter <= 0)
+		{
+			break;
+		}	
 
+		counter--;
 
 		if (input.substr(0,1) != "#" && input.substr(0,1) != "R")
 		{
@@ -170,9 +180,10 @@ graph_t graph_from_file(std::string name)
 }
 
 
-graph_t cit_graph_from_file(std::string name)
+graph_t cit_graph_from_file(std::string name, bool truncate_early)
 {
-	//if a line starts with #, ignore it.
+	int counter = 1000;
+
 	std::ifstream infile(name);
 
 	int biggest_player_id = 0;
@@ -185,14 +196,22 @@ graph_t cit_graph_from_file(std::string name)
 
 	std::string input;
 
-	while (infile >> input)// >> ", 0," >>team_a>>", 0,">>team_b>>", 0")
+	while (std::getline(infile,input))// >> ", 0," >>team_a>>", 0,">>team_b>>", 0")
 	{
-
-		if (input.substr(1) != "#")
+		//check to make sure still within counter
+		if (truncate_early && counter <= 0)
 		{
-			std::string node_a = input.substr(input.find(" "));
-			std::string node_b = input.substr(input.find(" ") +1,input.size());
+			break;
+		}
+		counter--;
+
+		if (input.substr(0,1) != "#")
+		{
+			std::string node_a = input.substr(0,input.find(" "));
+			std::string node_b = input.substr(input.find(" ") +1);
 			
+			std::cout<<"node a is "<<node_a<<std::endl;
+			std::cout<<"node b is "<<node_b<<std::endl;
 			//for each teammmate in team_a, we need to add an edge from that teammate to every member in team_b
 
 			int start = std::stoi(node_a);
