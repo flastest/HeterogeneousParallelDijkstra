@@ -7,7 +7,7 @@
 #include <vector>
 #include "BGL_Dijkstra.hh"
 #include "BBO_graph_creator.hh"
-
+#include "graph_gen.hh"
 
 using namespace std;
 using namespace boost;
@@ -54,6 +54,30 @@ string print_dijkstra_results(graph_t g, distance_map_t distances)
 
 	return results;
 }
+
+//tests a graph with the BGL
+//takes inputs of a graph, a source node, and a reference to a vector which will contain predecessors
+//returns all of the distances as a vector. I guess each index corresponds to a vertex descriptor
+std::vector<int> testBGL (graph_t g, vertex_descriptor s, std::vector<vertex_descriptor> &p)
+{
+	
+	// Keeps track of the predecessor of each vertex
+	//std::vector<vertex_descriptor> p(num_vertices(g));
+	// Keeps track of the distance to each vertex
+	std::vector<int> d(num_vertices(g));
+
+
+
+	boost::dijkstra_shortest_paths(g, s,
+		predecessor_map(
+	     make_iterator_property_map(p.begin(), get(vertex_index, g))).
+	   distance_map(
+	     make_iterator_property_map(d.begin(), get(vertex_index, g)))
+	   );
+	
+	return d;
+}
+
 
 //this is a bidirectional graph
 //
@@ -102,7 +126,10 @@ bool test1 (bool TEST_DEBUG, int num_threads)
 
 	auto distances = dijkstra_algorithm(g, s, p, num_threads);
 
-	vector<int> true_distances = {0,9,2,6,10};
+	std::vector<vertex_descriptor> p_BGL(num_nodes);
+
+	vector<int> true_distances = testBGL ( g,  s, p_BGL);
+//	vector<int> true_distances = {0,9,2,6,10};
 	
 	//this needs to iterate thru the vectors
 
@@ -677,28 +704,7 @@ bool test6(bool TEST_DEBUG, int num_threads)
 //  
 
 
-//tests a graph with the BGL
-//takes inputs of a graph, a source node, and a reference to a vector which will contain predecessors
-//returns all of the distances as a vector. I guess each index corresponds to a vertex descriptor
-std::vector<int> testBGL (graph_t g, vertex_descriptor s, std::vector<vertex_descriptor> &p)
-{
-	
-	// Keeps track of the predecessor of each vertex
-	//std::vector<vertex_descriptor> p(num_vertices(g));
-	// Keeps track of the distance to each vertex
-	std::vector<int> d(num_vertices(g));
 
-
-
-	boost::dijkstra_shortest_paths(g, s,
-		predecessor_map(
-	     make_iterator_property_map(p.begin(), get(vertex_index, g))).
-	   distance_map(
-	     make_iterator_property_map(d.begin(), get(vertex_index, g)))
-	   );
-	
-	return d;
-}
 
 
 float timed_dijkstra(graph_t g, vertex_descriptor s, int num_threads)
@@ -719,19 +725,142 @@ float timed_dijkstra(graph_t g, vertex_descriptor s, int num_threads)
 bool test_DOTA(bool TEST_DEBUG, int num_threads){
 	//aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaah
 	if (TEST_DEBUG) std::cout<<"loading graph from BBO"<<std::endl;
-	graph_t g = graph_from_file("DotaLeague/DotaLeague_Edge_Basic");
-	(void) num_threads;
+	graph_t g = graph_from_file("DotaLeague/DotaLeague_Edge_Basic",true);
+	
+	//number of nodes in g
+	int num_nodes = num_vertices(g);
 
+
+	//get a source node...
+	vertex_descriptor s = vertex(1, g);
+
+	predecessor_map_t pred;
+
+	distance_map_t parallel_results = parallel_dijkstra(g, s, pred, num_threads);
+
+	std::vector<vertex_descriptor> p_BGL(num_nodes);
+
+	std::vector<int> BGL_results = testBGL ( g,  s, p_BGL);
+	
+	
+	for (int i = 0 ; i < num_nodes; i++)
+	{
+		if(TEST_DEBUG)
+		{	
+			std::cout<<"test number "<<i<<std::endl;
+			std::cout<<"comparing " <<parallel_results[i] <<" and "<<BGL_results[i]<<std::endl;
+		}
+		if(parallel_results[i] != BGL_results[i])
+		{
+			if(parallel_results[i] != INFINITY && BGL_results[i] !=  2147483647) return false;
+		}
+		
+		//not sure if I need to check predecessors because they might be different
+	}
+
+	return true;
+}
+
+bool test_cit(bool TEST_DEBUG, int num_threads)
+{
+	if (TEST_DEBUG) std::cout<<"loading graph from cit"<<std::endl;
+	graph_t g = graph_from_file("cit-Patents.txt",true);
+	
+	//number of nodes in g
+	int num_nodes = num_vertices(g);
+
+
+	//get a source node...
+	vertex_descriptor s = vertex(1, g);
+
+	predecessor_map_t pred;
+
+	distance_map_t parallel_results = parallel_dijkstra(g, s, pred, num_threads);
+
+	std::vector<vertex_descriptor> p_BGL(num_nodes);
+
+	std::vector<int> BGL_results = testBGL ( g,  s, p_BGL);	
+
+	for (int i = 0 ; i < num_nodes; i++)
+	{
+		if(TEST_DEBUG)
+		{	
+			std::cout<<"test number "<<i<<std::endl;
+			std::cout<<"comparing " <<parallel_results[i] <<" and "<<BGL_results[i]<<std::endl;
+		}
+		if(parallel_results[i] != BGL_results[i])
+		{
+			if(parallel_results[i] != INFINITY && BGL_results[i] !=  2147483647) return false;
+		}
+		
+		//not sure if I need to check predecessors because they might be different
+	}
+
+	return true;
+}
+
+bool test_a_graph(bool TEST_DEBUG, int num_threads)
+{
+	if (TEST_DEBUG) std::cout<<"loading graph from a graph"<<std::endl;
+	graph_t g = graph_from_file("a_graph.txt",true);
+	
+	//number of nodes in g
+	int num_nodes = num_vertices(g);
+
+
+	//get a source node...
+	vertex_descriptor s = vertex(1, g);
+
+	predecessor_map_t pred;
+
+	distance_map_t parallel_results = parallel_dijkstra(g, s, pred, num_threads);
+
+	std::vector<vertex_descriptor> p_BGL(num_nodes);
+
+	std::vector<int> BGL_results = testBGL ( g,  s, p_BGL);
+	
+	
+	for (int i = 0 ; i < num_nodes; i++)
+	{
+		if(TEST_DEBUG)
+		{	
+			std::cout<<"test number "<<i<<std::endl;
+			std::cout<<"comparing " <<parallel_results[i] <<" and "<<BGL_results[i]<<std::endl;
+		}
+		if(parallel_results[i] != BGL_results[i])
+		{
+			if(parallel_results[i] != INFINITY && BGL_results[i] !=  2147483647) return false;
+		}
+		
+		//not sure if I need to check predecessors because they might be different
+	}
 
 	return true;
 }
 
 
-
-
 int main()
 {
 	int num_threads = 2;
+
+
+	if(test_a_graph(false,num_threads))
+	{
+		cout<<"test_a_graph passed"<<endl;
+	}else{
+		cout<<"test_a_graph failed :("<<endl;
+		test_a_graph(true,num_threads);
+	}
+
+
+	if(test_cit(false,num_threads))
+	{
+		cout<<"test_cit passed"<<endl;
+	}else{
+		cout<<"test_cit failed :("<<endl;
+		test_cit(true,num_threads);
+	}
+
 	if(test1(false,num_threads)) 
 	{
 		cout<<"test1 passed"<<endl;
