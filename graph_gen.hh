@@ -1,6 +1,6 @@
-#include <cstdlib>
-#include <ctime>
-#include <fstream>
+#include <cstdlib> //rand
+#include <ctime>   //time
+#include <fstream> 
 #include <string>
 #include <iostream>
 #include <vector>
