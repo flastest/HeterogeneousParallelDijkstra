@@ -764,7 +764,7 @@ bool test_DOTA(bool TEST_DEBUG, int num_threads){
 bool test_cit(bool TEST_DEBUG, int num_threads)
 {
 	if (TEST_DEBUG) std::cout<<"loading graph from cit"<<std::endl;
-	graph_t g = graph_from_file("cit-Patents.txt",true);
+	graph_t g = cit_graph_from_file("cit-Patents.txt",true);
 	
 	//number of nodes in g
 	int num_nodes = num_vertices(g);
@@ -802,7 +802,7 @@ bool test_cit(bool TEST_DEBUG, int num_threads)
 bool test_a_graph(bool TEST_DEBUG, int num_threads)
 {
 	if (TEST_DEBUG) std::cout<<"loading graph from a graph"<<std::endl;
-	graph_t g = graph_from_file("a_graph.txt",true);
+	graph_t g = cit_graph_from_file("a_graph.txt",true);
 	
 	//number of nodes in g
 	int num_nodes = num_vertices(g);
@@ -843,8 +843,10 @@ int main()
 {
 	int num_threads = 2;
 
+	//generate_graph("a_graph.txt",200,1000);
+	//std::cout<<"graph has been generated." <<std::endl;
 
-	if(test_a_graph(false,num_threads))
+	if(test_a_graph(true,num_threads))
 	{
 		cout<<"test_a_graph passed"<<endl;
 	}else{
