@@ -4,7 +4,7 @@ using namespace std;
 using namespace boost;
 
 
-bool DEBUG = true;
+bool DEBUG = false;
 
 
 
@@ -22,8 +22,9 @@ chart like hw0, x axis number threads
  y axis time to completion
  see how it scales
  find minimum
+SCP to copy files
 
-
+ssh into flastera@fries from reed's wifi
 
 
 
