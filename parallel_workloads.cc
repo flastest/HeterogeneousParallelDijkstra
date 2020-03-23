@@ -5,6 +5,7 @@
 #include <iostream>
 #include <chrono>
 #include <vector>
+#include <fstream>
 #include "BGL_Dijkstra.hh"
 #include "BBO_graph_creator.hh"
 #include "graph_gen.hh"
@@ -29,6 +30,7 @@ typedef std::pair<int, int> Edge;
 
 using distance_map_t = map<vertex_descriptor, float>;
 using predecessor_map_t = map<vertex_descriptor,vertex_descriptor>;
+using time_type = int;
 
 // here are the different dijkstra algos you can use here:
 //	dijkstra_shortest_paths_swag_version
@@ -736,7 +738,11 @@ bool test_DOTA(bool TEST_DEBUG, int num_threads){
 
 	predecessor_map_t pred;
 
+	auto startTime = chrono::high_resolution_clock::now();
 	distance_map_t parallel_results = parallel_dijkstra(g, s, pred, num_threads);
+	auto endTime = chrono::high_resolution_clock::now();
+
+	float t = chrono::duration_cast<std::chrono::microseconds>( endTime - startTime ).count();
 
 	std::vector<vertex_descriptor> p_BGL(num_nodes);
 
@@ -758,6 +764,7 @@ bool test_DOTA(bool TEST_DEBUG, int num_threads){
 		//not sure if I need to check predecessors because they might be different
 	}
 
+	std::cout<<"test dota graph took " << t << "microseconds"<<std::endl;
 	return true;
 }
 
@@ -799,7 +806,8 @@ bool test_cit(bool TEST_DEBUG, int num_threads)
 	return true;
 }
 
-bool test_a_graph(bool TEST_DEBUG, int num_threads)
+//returns the time it takes to run this
+int test_a_graph(bool TEST_DEBUG, int num_threads)
 {
 	if (TEST_DEBUG) std::cout<<"loading graph from a graph"<<std::endl;
 	graph_t g = cit_graph_from_file("a_graph.txt",true);
@@ -813,7 +821,11 @@ bool test_a_graph(bool TEST_DEBUG, int num_threads)
 
 	predecessor_map_t pred;
 
+	auto startTime = chrono::high_resolution_clock::now();
 	distance_map_t parallel_results = parallel_dijkstra(g, s, pred, num_threads);
+	auto endTime = chrono::high_resolution_clock::now();
+
+	float t = chrono::duration_cast<std::chrono::microseconds>( endTime - startTime ).count();
 
 	std::vector<vertex_descriptor> p_BGL(num_nodes);
 
@@ -829,106 +841,200 @@ bool test_a_graph(bool TEST_DEBUG, int num_threads)
 		}
 		if(parallel_results[i] != BGL_results[i])
 		{
-			if(parallel_results[i] != INFINITY && BGL_results[i] !=  2147483647) return false;
+			if(parallel_results[i] != INFINITY && BGL_results[i] !=  2147483647) return -1;
 		}
 		
 		//not sure if I need to check predecessors because they might be different
 	}
-
-	return true;
+	std::cout<<"test a graph took " << t << "microseconds"<<std::endl;
+	return t;
 }
 
+
+time_type get_min_graph_time_for_given_amount_of_threads(bool TEST_DEBUG, int num_threads, int num_tests, std::string graph_name)
+{
+	time_type min_time = 2147483647;
+
+	if (TEST_DEBUG) 
+	{
+		std::cout<<"loading graph from a graph"<<std::endl;
+		std::cout << "num threads: " << num_threads<< " num tests: "<<num_tests<<std::endl; 
+	}
+	graph_t g = cit_graph_from_file(graph_name,true);
+	
+	//number of nodes in g
+	int num_nodes = num_vertices(g);
+
+
+	//get a source node...
+	vertex_descriptor s = vertex(1, g);
+
+	predecessor_map_t pred;
+
+
+	//get the results from the BGL to compare against
+	std::vector<vertex_descriptor> p_BGL(num_nodes);
+
+	std::vector<int> BGL_results = testBGL ( g,  s, p_BGL);
+		
+		
+
+
+	for (int i = 0 ; i < num_tests; i++)
+	{
+		auto startTime = chrono::high_resolution_clock::now();
+		distance_map_t parallel_results = parallel_dijkstra(g, s, pred, num_threads);
+		auto endTime = chrono::high_resolution_clock::now();
+
+		float t = chrono::duration_cast<std::chrono::microseconds>( endTime - startTime ).count();
+
+		for (int i = 0 ; i < num_nodes; i++)
+		{
+			if(TEST_DEBUG)
+			{	
+				std::cout<<"test number "<<i<<std::endl;
+				std::cout<<"comparing " <<parallel_results[i] <<" and "<<BGL_results[i]<<std::endl;
+			}
+			if(parallel_results[i] != BGL_results[i])
+			{
+				if(parallel_results[i] != INFINITY && BGL_results[i] !=  2147483647) return -1;
+			}
+			
+			//not sure if I need to check predecessors because they might be different
+		}
+
+		min_time = t < min_time ? t : min_time; 
+	}
+	return min_time;
+}
 
 int main()
 {
-	int num_threads = 2;
+	std::string graph_name = "a_graph20k.txt";
 
-	//generate_graph("a_graph.txt",200,1000);
-	//std::cout<<"graph has been generated." <<std::endl;
-
-	if(test_a_graph(true,num_threads))
-	{
-		cout<<"test_a_graph passed"<<endl;
-	}else{
-		cout<<"test_a_graph failed :("<<endl;
-		test_a_graph(true,num_threads);
-	}
+	generate_graph("a_graph20k.txt",10000,50000);
+	std::cout<<"graph has been generated." <<std::endl;
 
 
-	if(test_cit(false,num_threads))
-	{
-		cout<<"test_cit passed"<<endl;
-	}else{
-		cout<<"test_cit failed :("<<endl;
-		test_cit(true,num_threads);
-	}
 
-	if(test1(false,num_threads)) 
-	{
-		cout<<"test1 passed"<<endl;
-	} else {
-		cout<<"test1 failed!!"<<endl;
-		test1(true,num_threads);
-	}
+	int number_trials = 20;
+	ofstream file_stream;
+  	file_stream.open ("16threads.txt");
+  	std::cout<<"about to start 1st thread"<<std::endl;
+	file_stream << "1\t" << get_min_graph_time_for_given_amount_of_threads(false, 1, number_trials, graph_name)<< "\n";
+	std::cout<<"about to start 2nd thread"<<std::endl;
+	file_stream << "2\t" << get_min_graph_time_for_given_amount_of_threads(false, 2, number_trials, graph_name)<< "\n";
+	std::cout<<"about to start 3rd thread"<<std::endl;
+	file_stream << "3\t" << get_min_graph_time_for_given_amount_of_threads(false, 3, number_trials, graph_name)<< "\n";
+	std::cout<<"about to start 4th thread"<<std::endl;
+	file_stream << "4\t" << get_min_graph_time_for_given_amount_of_threads(false, 4, number_trials, graph_name)<< "\n";
+	std::cout<<"about to start 6th thread"<<std::endl;
+	file_stream << "6\t" << get_min_graph_time_for_given_amount_of_threads(false, 6, number_trials, graph_name)<< "\n";
+	std::cout<<"about to start 8th thread"<<std::endl;
+	file_stream << "8\t" << get_min_graph_time_for_given_amount_of_threads(false, 8, number_trials, graph_name)<< "\n";
+	std::cout<<"about to start 16th thread"<<std::endl;
+	file_stream << "16\t" << get_min_graph_time_for_given_amount_of_threads(false, 16, number_trials, graph_name) << "\n";
+	std::cout<<"about to start 24th thread"<<std::endl;
+	file_stream << "24\t" << get_min_graph_time_for_given_amount_of_threads(false, 24, number_trials, graph_name) << "\n";
+	std::cout<<"about to start 32nd thread"<<std::endl;
+	file_stream << "32\t" << get_min_graph_time_for_given_amount_of_threads(false, 32, number_trials, graph_name) << "\n";
+	file_stream.close();
 
-	if(test2(false,num_threads)) 
-	{
-		cout<<"test2 passed"<<endl;
-	} else {
-		cout<<"test2 failed!!"<<endl;
-		test2(true,num_threads);
-	}
 
-	if(test2i(false,num_threads)) 
-	{
-		cout<<"test2i passed"<<endl;
-	} else {
-		cout<<"test2i failed!!"<<endl;
-		test2i(true,num_threads);
-	}
+}	
 
-	if(test3(false,num_threads)) 
-	{
-		cout<<"test3 passed"<<endl;
-	} else {
-		cout<<"test3 failed!!"<<endl;
-		test3(true,num_threads);
-	}
 
-	if(test4(false,num_threads)) 
-	{
-		cout<<"test4 passed"<<endl;
-	} else {
-		cout<<"test4 failed!!"<<endl;
-		test4(true,num_threads);
-	}
 
-	if(test5(false,num_threads)) 
-	{
-		cout<<"test5 passed"<<endl;
-	} else {
-		cout<<"test5 failed!!"<<endl;
-		test5(true,num_threads);
-	}
+// int main()
+// {
+// 	int num_threads = 2;
 
-	if(test6(false,num_threads)) 
-	{
-		cout<<"test6 passed"<<endl;
-	} else {
-		cout<<"test6 failed!!"<<endl;
-		test6(true,num_threads);
-	}
+// //	generate_graph("a_graph.txt",2000,10000);
+// //	std::cout<<"graph has been generated." <<std::endl;
 
-	if(test_DOTA(false,num_threads)) 
-	{
-		cout<<"test_DOTA passed"<<endl;
-	} else {
-		cout<<"test_DOTA failed!!"<<endl;
-		test_DOTA(true,num_threads);
-	}
+// 	if(test_a_graph(false,num_threads)>0)
+// 	{
+// 		cout<<"test_a_graph passed"<<endl;
+// 	}else{
+// 		cout<<"test_a_graph failed :("<<endl;
+// 		test_a_graph(true,num_threads);
+// 	}
 
-	return 0;
 
-}
+// 	if(test_cit(false,num_threads))
+// 	{
+// 		cout<<"test_cit passed"<<endl;
+// 	}else{
+// 		cout<<"test_cit failed :("<<endl;
+// 		test_cit(true,num_threads);
+// 	}
+
+// 	if(test1(false,num_threads)) 
+// 	{
+// 		cout<<"test1 passed"<<endl;
+// 	} else {
+// 		cout<<"test1 failed!!"<<endl;
+// 		test1(true,num_threads);
+// 	}
+
+// 	if(test2(false,num_threads)) 
+// 	{
+// 		cout<<"test2 passed"<<endl;
+// 	} else {
+// 		cout<<"test2 failed!!"<<endl;
+// 		test2(true,num_threads);
+// 	}
+
+// 	if(test2i(false,num_threads)) 
+// 	{
+// 		cout<<"test2i passed"<<endl;
+// 	} else {
+// 		cout<<"test2i failed!!"<<endl;
+// 		test2i(true,num_threads);
+// 	}
+
+// 	if(test3(false,num_threads)) 
+// 	{
+// 		cout<<"test3 passed"<<endl;
+// 	} else {
+// 		cout<<"test3 failed!!"<<endl;
+// 		test3(true,num_threads);
+// 	}
+
+// 	if(test4(false,num_threads)) 
+// 	{
+// 		cout<<"test4 passed"<<endl;
+// 	} else {
+// 		cout<<"test4 failed!!"<<endl;
+// 		test4(true,num_threads);
+// 	}
+
+// 	if(test5(false,num_threads)) 
+// 	{
+// 		cout<<"test5 passed"<<endl;
+// 	} else {
+// 		cout<<"test5 failed!!"<<endl;
+// 		test5(true,num_threads);
+// 	}
+
+// 	if(test6(false,num_threads)) 
+// 	{
+// 		cout<<"test6 passed"<<endl;
+// 	} else {
+// 		cout<<"test6 failed!!"<<endl;
+// 		test6(true,num_threads);
+// 	}
+
+// 	if(test_DOTA(false,num_threads)) 
+// 	{
+// 		cout<<"test_DOTA passed"<<endl;
+// 	} else {
+// 		cout<<"test_DOTA failed!!"<<endl;
+// 		test_DOTA(true,num_threads);
+// 	}
+
+// 	return 0;
+
+// }
 
 
