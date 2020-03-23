@@ -210,8 +210,12 @@ graph_t cit_graph_from_file(std::string name, bool truncate_early)
 			std::string node_a = input.substr(0,input.find(" "));
 			std::string node_b = input.substr(input.find(" ") +1);
 			
-			std::cout<<"node a is "<<node_a<<std::endl;
-			std::cout<<"node b is "<<node_b<<std::endl;
+			if(DEBUG_LOGS)
+			{
+				std::cout<<"node a is "<<node_a<<std::endl;
+				std::cout<<"node b is "<<node_b<<std::endl;
+			}
+
 			//for each teammmate in team_a, we need to add an edge from that teammate to every member in team_b
 
 			int start = std::stoi(node_a);
