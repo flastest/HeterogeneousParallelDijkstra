@@ -709,17 +709,6 @@ bool test6(bool TEST_DEBUG, int num_threads)
 
 
 
-float timed_dijkstra(graph_t g, vertex_descriptor s, int num_threads)
-{
-	predecessor_map_t p;
-	auto startTime = chrono::high_resolution_clock::now();
-	auto distances = dijkstra_algorithm(g, s, p, num_threads);
-	auto endTime = chrono::high_resolution_clock::now();
-
-	float t = chrono::duration_cast<std::chrono::microseconds>( endTime - startTime ).count();
-	return t;
-}
-
 
 
 
@@ -846,6 +835,7 @@ int test_a_graph(bool TEST_DEBUG, int num_threads)
 		
 		//not sure if I need to check predecessors because they might be different
 	}
+	std::cout<< "results are" << print_dijkstra_results(g, parallel_results) <<std::endl;
 	std::cout<<"test a graph took " << t << "microseconds"<<std::endl;
 	return t;
 }
@@ -865,7 +855,6 @@ time_type get_min_graph_time_for_given_amount_of_threads(bool TEST_DEBUG, int nu
 	//number of nodes in g
 	int num_nodes = num_vertices(g);
 
-
 	//get a source node...
 	vertex_descriptor s = vertex(1, g);
 
@@ -882,6 +871,7 @@ time_type get_min_graph_time_for_given_amount_of_threads(bool TEST_DEBUG, int nu
 
 	for (int i = 0 ; i < num_tests; i++)
 	{
+		if(TEST_DEBUG) std::cout << "test " << i << " of "<< num_tests << std::endl;
 		auto startTime = chrono::high_resolution_clock::now();
 		distance_map_t parallel_results = parallel_dijkstra(g, s, pred, num_threads);
 		auto endTime = chrono::high_resolution_clock::now();
@@ -890,11 +880,11 @@ time_type get_min_graph_time_for_given_amount_of_threads(bool TEST_DEBUG, int nu
 
 		for (int i = 0 ; i < num_nodes; i++)
 		{
-			if(TEST_DEBUG)
-			{	
-				std::cout<<"test number "<<i<<std::endl;
-				std::cout<<"comparing " <<parallel_results[i] <<" and "<<BGL_results[i]<<std::endl;
-			}
+			// if(TEST_DEBUG)
+			// {	
+			// 	std::cout<<"test number "<<i<<std::endl;
+			// 	std::cout<<"comparing " <<parallel_results[i] <<" and "<<BGL_results[i]<<std::endl;
+			// }
 			if(parallel_results[i] != BGL_results[i])
 			{
 				if(parallel_results[i] != INFINITY && BGL_results[i] !=  2147483647) return -1;
@@ -910,34 +900,36 @@ time_type get_min_graph_time_for_given_amount_of_threads(bool TEST_DEBUG, int nu
 
 int main()
 {
-	std::string graph_name = "a_graph20k.txt";
+	//stuck: bug somewhere, performancebug
+	std::string graph_name = "4nodes.txt";
 
-	generate_graph("a_graph20k.txt",10000,50000);
+	generate_graph("4nodes.txt",4,20);
 	std::cout<<"graph has been generated." <<std::endl;
 
 
-
-	int number_trials = 20;
+	bool debug_on = true;
+	int number_trials = 1;
 	ofstream file_stream;
-  	file_stream.open ("16threads.txt");
+  	file_stream.open ("32threads.txt");
   	std::cout<<"about to start 1st thread"<<std::endl;
-	file_stream << "1\t" << get_min_graph_time_for_given_amount_of_threads(false, 1, number_trials, graph_name)<< "\n";
+	file_stream << "1\t" << get_min_graph_time_for_given_amount_of_threads(debug_on, 1, number_trials, graph_name)<< "\n";
 	std::cout<<"about to start 2nd thread"<<std::endl;
-	file_stream << "2\t" << get_min_graph_time_for_given_amount_of_threads(false, 2, number_trials, graph_name)<< "\n";
+	file_stream << "2\t" << get_min_graph_time_for_given_amount_of_threads(debug_on, 2, number_trials, graph_name)<< "\n";
+	if (true) return 1;
 	std::cout<<"about to start 3rd thread"<<std::endl;
-	file_stream << "3\t" << get_min_graph_time_for_given_amount_of_threads(false, 3, number_trials, graph_name)<< "\n";
+	file_stream << "3\t" << get_min_graph_time_for_given_amount_of_threads(debug_on, 3, number_trials, graph_name)<< "\n";
 	std::cout<<"about to start 4th thread"<<std::endl;
-	file_stream << "4\t" << get_min_graph_time_for_given_amount_of_threads(false, 4, number_trials, graph_name)<< "\n";
+	file_stream << "4\t" << get_min_graph_time_for_given_amount_of_threads(debug_on, 4, number_trials, graph_name)<< "\n";
 	std::cout<<"about to start 6th thread"<<std::endl;
-	file_stream << "6\t" << get_min_graph_time_for_given_amount_of_threads(false, 6, number_trials, graph_name)<< "\n";
+	file_stream << "6\t" << get_min_graph_time_for_given_amount_of_threads(debug_on, 6, number_trials, graph_name)<< "\n";
 	std::cout<<"about to start 8th thread"<<std::endl;
-	file_stream << "8\t" << get_min_graph_time_for_given_amount_of_threads(false, 8, number_trials, graph_name)<< "\n";
+	file_stream << "8\t" << get_min_graph_time_for_given_amount_of_threads(debug_on, 8, number_trials, graph_name)<< "\n";
 	std::cout<<"about to start 16th thread"<<std::endl;
-	file_stream << "16\t" << get_min_graph_time_for_given_amount_of_threads(false, 16, number_trials, graph_name) << "\n";
+	file_stream << "16\t" << get_min_graph_time_for_given_amount_of_threads(debug_on, 16, number_trials, graph_name) << "\n";
 	std::cout<<"about to start 24th thread"<<std::endl;
-	file_stream << "24\t" << get_min_graph_time_for_given_amount_of_threads(false, 24, number_trials, graph_name) << "\n";
+	file_stream << "24\t" << get_min_graph_time_for_given_amount_of_threads(debug_on, 24, number_trials, graph_name) << "\n";
 	std::cout<<"about to start 32nd thread"<<std::endl;
-	file_stream << "32\t" << get_min_graph_time_for_given_amount_of_threads(false, 32, number_trials, graph_name) << "\n";
+	file_stream << "32\t" << get_min_graph_time_for_given_amount_of_threads(debug_on, 32, number_trials, graph_name) << "\n";
 	file_stream.close();
 
 
