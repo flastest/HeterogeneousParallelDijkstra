@@ -6,6 +6,8 @@ using namespace boost;
 
 bool DEBUG = false;
 
+//this one is for the print statements that print threads by locking a print mutex
+bool MULTITHREAD_DEBUG = true;
 
 
 /*
@@ -28,7 +30,30 @@ ssh into flastera@fries from reed's wifi
 
 
 
+issues: sometimes, especially with larger data, it randomly stops
+
+3.23
+debug, performance bugs, memory bugs
+single process in debugger, print statements, read everything
+walk thru the algorithm with the computer
+macro for printing, which prints thread number 
+
 */
+
+
+std::mutex print_mutex;
+// a macro for printing?? locks a thing so the threads don't print over each other
+void print_thread_debug(int thread_id, std::string debug_message, ostream& output_stream)
+{
+	//first lock the mutex
+	std::lock_guard<std::mutex> guard(print_mutex);
+	output_stream<< "thread: " << thread_id << ": " << debug_message <<std::endl;
+}
+
+//global output stream
+ofstream debug_file_stream;
+debug_file_stream.open ("debuglog.txt");
+
 
 //for using BGL's graph_t (adjacency table):
 //https://www.boost.org/doc/libs/1_60_0/libs/graph/doc/adjacency_list.html
@@ -205,6 +230,7 @@ using offer_t = std::pair<vertex_descriptor, float>;
 
 
 
+
 //functor for comparing offers in the priority queue
 struct Offer_Comparator
 {
@@ -286,7 +312,7 @@ distance_map_t initialize_distances_from_source_and_mutex_maps(
 	{
 		vertex_descriptor current_vertex = vertex(i,graph);
 		distances[current_vertex] = INFINITY;
-		if (DEBUG) std::cout<<"i bet that infinity is a really big negative. it is "<< INFINITY <<std::endl;
+		//if (DEBUG) std::cout<<"i bet that infinity is a really big negative. it is "<< INFINITY <<std::endl;
 		distance_mutexes[current_vertex] = mutex_ptr(new std::mutex);
 		predecessor_mutexes[current_vertex] = mutex_ptr(new std::mutex);
 	}
@@ -294,6 +320,8 @@ distance_map_t initialize_distances_from_source_and_mutex_maps(
 	return distances;
 
 }
+
+
 //this needs args:
 // vector<bool> done (index is thread id, bool is if done or not)
 // int thread_id (self explanatory, this thread's id)
@@ -325,6 +353,7 @@ void parallel_dijkstra_thread(vector<bool>& done,
 
 			offer_t offer;
 			{
+				if (DEBUG) std::cout<<"locking offer"<<std::endl;
 				std::lock_guard<std::mutex> guard(pq_mutex);
 
 				offer = offer_pq.top();
@@ -472,7 +501,7 @@ distance_map_t parallel_dijkstra(const graph_t &graph,
 	{
 		threads[thread].join();
 	}
-
+	debug_file_stream.close();
 	return distances;
 }
 
