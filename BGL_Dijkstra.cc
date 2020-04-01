@@ -1,5 +1,5 @@
 #include "BGL_Dijkstra.hh"
-
+#include <fstream>
 using namespace std;
 using namespace boost;
 
@@ -7,7 +7,7 @@ using namespace boost;
 bool DEBUG = false;
 
 //this one is for the print statements that print threads by locking a print mutex
-bool MULTITHREAD_DEBUG = true;
+bool DEBUG_THREAD = true;
 
 
 /*
@@ -47,12 +47,12 @@ void print_thread_debug(int thread_id, std::string debug_message, ostream& outpu
 {
 	//first lock the mutex
 	std::lock_guard<std::mutex> guard(print_mutex);
+	//then print
 	output_stream<< "thread: " << thread_id << ": " << debug_message <<std::endl;
 }
 
 //global output stream
 ofstream debug_file_stream;
-debug_file_stream.open ("debuglog.txt");
 
 
 //for using BGL's graph_t (adjacency table):
@@ -259,7 +259,8 @@ void relax_vertex(vertex_descriptor v,
 		   float vd,
 		   offer_pqueue_t& offer_pq, 
 		   mutex_map_t distance_mutexes,
-		   distance_map_t& distances )
+		   distance_map_t& distances,
+		   int thread_id )
 {
 	std::lock_guard guard(*distance_mutexes[v]);
 	//now I can play around with offers[v]
@@ -292,6 +293,7 @@ void relax_vertex(vertex_descriptor v,
 		}*/
 		//this is publishOfferNoMP
 		{
+			if (DEBUG_THREAD) print_thread_debug(thread_id, "ADDING AN OFFER TO " + std::to_string(v) + "!!! distnace is " + std::to_string(vd) , debug_file_stream);
 			std::lock_guard<std::mutex> guard2(pq_mutex);
 			offer_pq.push(offer_t(v,vd));
 		}
@@ -339,26 +341,45 @@ void parallel_dijkstra_thread(vector<bool>& done,
 					predecessor_map_t& predecessors,
 					const graph_t& graph)
 {
-
+	if (DEBUG_THREAD) print_thread_debug(thread_id, "starting thread", debug_file_stream);
 	if (DEBUG) std::cout<<"starting a thread" <<std::endl;
 	const auto weight = get(edge_weight, graph);
 	if (DEBUG) std::cout<< "is thread done? it shouldn't be. This should be true " <<!done[thread_id]<<std::endl;
 	while(!done[thread_id])
 	{
+		if (DEBUG_THREAD) 
+		{
+			print_thread_debug(thread_id, "this thread isn't done yet", debug_file_stream);
+			std::string debug = offer_pq.empty() ? "offer_pq is empty" : "offer_pq isn't empty";
+			print_thread_debug(thread_id, debug, debug_file_stream); 
+		}
 		if (DEBUG) std::cout <<"this thread isn't done yet" <<std::endl;
 		if (DEBUG) std::cout <<"is the offer_pq empty? 1 for yes, 0 for no: " <<offer_pq.empty()<<std::endl;
+		
+
+
 		if(!offer_pq.empty())
 		{
+			if (DEBUG_THREAD) print_thread_debug(thread_id, "offer_pq isn't empty", debug_file_stream);
 			if(DEBUG) std::cout<<"the offer pq isn't empty."<<std::endl;
 
 			offer_t offer;
 			{
+				print_thread_debug(thread_id, "locking offer", debug_file_stream);
 				if (DEBUG) std::cout<<"locking offer"<<std::endl;
 				std::lock_guard<std::mutex> guard(pq_mutex);
+				if(!offer_pq.empty())
+				{
+					offer = offer_pq.top();
+					offer_pq.pop();
+					if (DEBUG_THREAD) print_thread_debug(thread_id, std::to_string(offer_pq.size())+" amount of offers in offer pqueue", debug_file_stream);
+					if (DEBUG_THREAD) print_thread_debug(thread_id, "offer is locked. its node is "+std::to_string(offer.first)+" and its dist is " +std::to_string(offer.second), debug_file_stream);
+				}
+				print_thread_debug(thread_id, "unlocking offer", debug_file_stream);
+			}	
 
-				offer = offer_pq.top();
-				offer_pq.pop();
-			}
+
+
 
 			if (DEBUG) std::cout<< "we've obtained offer"<<std::endl; 
 			const auto vertex = offer.first;
@@ -369,11 +390,12 @@ void parallel_dijkstra_thread(vector<bool>& done,
 
 			{
 				std::lock_guard<std::mutex> guard(*distance_mutexes[vertex]);
-
+				if (DEBUG_THREAD) print_thread_debug(thread_id, "offer distance is " +std::to_string(offer_distance) + " and the already done distance is " + std::to_string(distances[vertex]), debug_file_stream);
 				if(DEBUG) std::cout<<"offer distance is "<<offer_distance <<" and distances[vertex] is "<<distances[vertex] <<std::endl;
 				if(offer_distance < distances[vertex])
 				{
 					if (DEBUG) std::cout <<"updating distances of " <<vertex<< " to offer_distance" <<std::endl;
+					if (DEBUG_THREAD) print_thread_debug(thread_id, "updating distance of " + std::to_string(vertex) + " to offer distance", debug_file_stream);
 					distances[vertex] = offer_distance;
 					explore = true;
 				}
@@ -395,6 +417,7 @@ void parallel_dijkstra_thread(vector<bool>& done,
 					float vd = offer_distance + weight_of_edge;
 
 					{
+						if (DEBUG_THREAD) print_thread_debug(thread_id, "updating node's predecessor", debug_file_stream);
 						std::scoped_lock guard(*predecessor_mutexes[neighbor]);
 						//now update this node's predecessor 
 						predecessors[neighbor] = vertex;
@@ -404,16 +427,22 @@ void parallel_dijkstra_thread(vector<bool>& done,
 					   	vd,  
 		   				offer_pq,
 		   				distance_mutexes, 
-		   				distances );
+		   				distances,
+		   				thread_id );
 				}
 			}
 
 		}
 		else // priority  queue is empty
-		{
+		{	
 
 			if(DEBUG) std::cout<< "this thread is done!" <<std::endl;
-			done[thread_id] = true;
+			{
+				std::scoped_lock guard(done_mutex);
+				done[thread_id] = true;
+			}
+			if (DEBUG_THREAD) print_thread_debug(thread_id, "this thread is done!", debug_file_stream);
+
 
 			if (DEBUG)
 			{
@@ -423,6 +452,7 @@ void parallel_dijkstra_thread(vector<bool>& done,
 			}
 
 			int i = 0 ;
+			//make sure all the other threads are done too
 			while(done[i] && i < done.size()) 
 			{
 				i++;
@@ -430,8 +460,8 @@ void parallel_dijkstra_thread(vector<bool>& done,
 			if(i == done.size())
 			{
 				return;
-			}
-			done[thread_id] = false;
+			} //still need to take care of this livelock TO DO TODO 
+			//done[thread_id] = false;
 		}
 	}
 }
@@ -443,6 +473,8 @@ distance_map_t parallel_dijkstra(const graph_t &graph,
 						predecessor_map_t &predecessors,
 						int NUM_THREADS)
 {
+
+	debug_file_stream.open("debuglog"+std::to_string(NUM_THREADS)+".txt");
 	//all the threads, pretty self explanatory
 	vector<thread> threads;
 
