@@ -20,7 +20,9 @@ void generate_graph(std::string file_name, int number_of_nodes, int number_of_ed
 
 	for (int i = 1; i <= number_of_edges; i++)
 	{
-		file_stream << 	to_string(rand() % number_of_nodes) << " " << to_string(rand() % number_of_nodes);
+    int point_a = rand() % number_of_nodes;
+    int point_b = rand() % number_of_nodes == point_a ? (point_b + 1) % number_of_nodes : point_b; 
+		file_stream << 	to_string(point_a) << " " << to_string(point_b);
 		if (i < number_of_edges) file_stream << "\n";
 	}
 
