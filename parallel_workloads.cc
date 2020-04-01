@@ -903,7 +903,7 @@ int main()
 	//stuck: bug somewhere, performancebug
 	std::string graph_name = "4nodes.txt";
 
-	generate_graph("4nodes.txt",4,20);
+	generate_graph("4nodes.txt",4,15);
 	std::cout<<"graph has been generated." <<std::endl;
 
 
@@ -912,24 +912,25 @@ int main()
 	ofstream file_stream;
   	file_stream.open ("32threads.txt");
   	std::cout<<"about to start 1st thread"<<std::endl;
-	file_stream << "1\t" << get_min_graph_time_for_given_amount_of_threads(debug_on, 1, number_trials, graph_name)<< "\n";
+	file_stream << "1\t" << get_min_graph_time_for_given_amount_of_threads(debug_on, 1, number_trials, graph_name)<< "\n------\n";
 	std::cout<<"about to start 2nd thread"<<std::endl;
-	file_stream << "2\t" << get_min_graph_time_for_given_amount_of_threads(debug_on, 2, number_trials, graph_name)<< "\n";
-	if (true) return 1;
+	file_stream << "2\t" << get_min_graph_time_for_given_amount_of_threads(debug_on, 2, number_trials, graph_name)<< "\n------\n";
+	
 	std::cout<<"about to start 3rd thread"<<std::endl;
-	file_stream << "3\t" << get_min_graph_time_for_given_amount_of_threads(debug_on, 3, number_trials, graph_name)<< "\n";
+	file_stream << "3\t" << get_min_graph_time_for_given_amount_of_threads(debug_on, 3, number_trials, graph_name)<< "\n------\n";
 	std::cout<<"about to start 4th thread"<<std::endl;
-	file_stream << "4\t" << get_min_graph_time_for_given_amount_of_threads(debug_on, 4, number_trials, graph_name)<< "\n";
+	file_stream << "4\t" << get_min_graph_time_for_given_amount_of_threads(debug_on, 4, number_trials, graph_name)<< "\n------\n";
+	if (false) return 1;
 	std::cout<<"about to start 6th thread"<<std::endl;
-	file_stream << "6\t" << get_min_graph_time_for_given_amount_of_threads(debug_on, 6, number_trials, graph_name)<< "\n";
+	file_stream << "6\t" << get_min_graph_time_for_given_amount_of_threads(debug_on, 6, number_trials, graph_name)<< "\n------\n";
 	std::cout<<"about to start 8th thread"<<std::endl;
-	file_stream << "8\t" << get_min_graph_time_for_given_amount_of_threads(debug_on, 8, number_trials, graph_name)<< "\n";
+	file_stream << "8\t" << get_min_graph_time_for_given_amount_of_threads(debug_on, 8, number_trials, graph_name)<< "\n------\n";
 	std::cout<<"about to start 16th thread"<<std::endl;
-	file_stream << "16\t" << get_min_graph_time_for_given_amount_of_threads(debug_on, 16, number_trials, graph_name) << "\n";
+	file_stream << "16\t" << get_min_graph_time_for_given_amount_of_threads(debug_on, 16, number_trials, graph_name) << "\n------\n";
 	std::cout<<"about to start 24th thread"<<std::endl;
-	file_stream << "24\t" << get_min_graph_time_for_given_amount_of_threads(debug_on, 24, number_trials, graph_name) << "\n";
+	file_stream << "24\t" << get_min_graph_time_for_given_amount_of_threads(debug_on, 24, number_trials, graph_name) << "\n------\n";
 	std::cout<<"about to start 32nd thread"<<std::endl;
-	file_stream << "32\t" << get_min_graph_time_for_given_amount_of_threads(debug_on, 32, number_trials, graph_name) << "\n";
+	file_stream << "32\t" << get_min_graph_time_for_given_amount_of_threads(debug_on, 32, number_trials, graph_name) << "\n------\n";
 	file_stream.close();
 
 
