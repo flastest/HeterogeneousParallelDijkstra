@@ -360,7 +360,12 @@ void parallel_dijkstra_thread(vector<bool>& done,
 
 		if(!offer_pq.empty())
 		{
-			if (DEBUG_THREAD) print_thread_debug(thread_id, "offer_pq isn't empty", debug_file_stream);
+			if (DEBUG_THREAD) 
+			{
+
+				print_thread_debug(thread_id, "offer_pq isn't empty", debug_file_stream);
+				print_thread_debug(thread_id, std::to_string(offer_pq.size())+" amount of offers in offer pqueue", debug_file_stream);
+			}
 			if(DEBUG) std::cout<<"the offer pq isn't empty."<<std::endl;
 
 			offer_t offer;
@@ -461,7 +466,7 @@ void parallel_dijkstra_thread(vector<bool>& done,
 			{
 				return;
 			} //still need to take care of this livelock TO DO TODO 
-			//done[thread_id] = false;
+			done[thread_id] = false;
 		}
 	}
 }
