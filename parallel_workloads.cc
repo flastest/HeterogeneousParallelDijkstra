@@ -866,14 +866,14 @@ time_type get_min_graph_time_for_given_amount_of_threads(bool TEST_DEBUG, int nu
 
 	std::vector<int> BGL_results = testBGL ( g,  s, p_BGL);
 		
-		
+	distance_map_t parallel_results;
 
 
 	for (int i = 0 ; i < num_tests; i++)
 	{
 		if(TEST_DEBUG) std::cout << "test " << i << " of "<< num_tests << std::endl;
 		auto startTime = chrono::high_resolution_clock::now();
-		distance_map_t parallel_results = parallel_dijkstra(g, s, pred, num_threads);
+		parallel_results = parallel_dijkstra(g, s, pred, num_threads);
 		auto endTime = chrono::high_resolution_clock::now();
 
 		float t = chrono::duration_cast<std::chrono::microseconds>( endTime - startTime ).count();
@@ -887,7 +887,11 @@ time_type get_min_graph_time_for_given_amount_of_threads(bool TEST_DEBUG, int nu
 			// }
 			if(parallel_results[i] != BGL_results[i])
 			{
-				if(parallel_results[i] != INFINITY && BGL_results[i] !=  2147483647) return -1;
+				if(parallel_results[i] != INFINITY && BGL_results[i] !=  2147483647)
+				{
+					std::cout<<"parallel dijkstra produced different result than BGL"<<std::endl;
+					return -1;	
+				} 
 			}
 			
 			//not sure if I need to check predecessors because they might be different
@@ -895,20 +899,21 @@ time_type get_min_graph_time_for_given_amount_of_threads(bool TEST_DEBUG, int nu
 
 		min_time = t < min_time ? t : min_time; 
 	}
+	if (TEST_DEBUG)std::cout<< "results are" << print_dijkstra_results(g, parallel_results) <<std::endl;
 	return min_time;
 }
 
 int main()
 {
 	//stuck: bug somewhere, performancebug
-	std::string graph_name = "4nodes.txt";
+	const std::string graph_name = "100nodes.txt";
 
-	generate_graph("4nodes.txt",4,15);
+	generate_graph(graph_name,100,500);
 	std::cout<<"graph has been generated." <<std::endl;
 
 
 	bool debug_on = true;
-	int number_trials = 1;
+	const int number_trials = 5;
 	ofstream file_stream;
   	file_stream.open ("32threads.txt");
   	std::cout<<"about to start 1st thread"<<std::endl;
