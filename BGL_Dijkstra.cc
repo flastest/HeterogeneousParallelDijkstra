@@ -368,6 +368,8 @@ void parallel_dijkstra_thread(vector<bool>& done,
 			}
 			if(DEBUG) std::cout<<"the offer pq isn't empty."<<std::endl;
 
+			bool offer_found = false;
+
 			offer_t offer;
 			{
 				print_thread_debug(thread_id, "locking offer", debug_file_stream);
@@ -379,64 +381,64 @@ void parallel_dijkstra_thread(vector<bool>& done,
 					offer_pq.pop();
 					if (DEBUG_THREAD) print_thread_debug(thread_id, std::to_string(offer_pq.size())+" amount of offers in offer pqueue", debug_file_stream);
 					if (DEBUG_THREAD) print_thread_debug(thread_id, "offer is locked. its node is "+std::to_string(offer.first)+" and its dist is " +std::to_string(offer.second), debug_file_stream);
+					offer_found = true;
 				}
 				print_thread_debug(thread_id, "unlocking offer", debug_file_stream);
 			}	
 
 
-
-
-			if (DEBUG) std::cout<< "we've obtained offer"<<std::endl; 
-			const auto vertex = offer.first;
-			const auto offer_distance = offer.second;
-			bool explore = false;
-
-			if (DEBUG) std::cout<<"offer distance is "<<offer_distance<<std::endl;
-
+			if (offer_found)
 			{
-				std::lock_guard<std::mutex> guard(*distance_mutexes[vertex]);
-				if (DEBUG_THREAD) print_thread_debug(thread_id, "offer distance is " +std::to_string(offer_distance) + " and the already done distance is " + std::to_string(distances[vertex]), debug_file_stream);
-				if(DEBUG) std::cout<<"offer distance is "<<offer_distance <<" and distances[vertex] is "<<distances[vertex] <<std::endl;
-				if(offer_distance < distances[vertex])
+				if (DEBUG) std::cout<< "we've obtained offer"<<std::endl; 
+				const auto vertex = offer.first;
+				const auto offer_distance = offer.second;
+				bool explore = false;
+
+				if (DEBUG) std::cout<<"offer distance is "<<offer_distance<<std::endl;
 				{
-					if (DEBUG) std::cout <<"updating distances of " <<vertex<< " to offer_distance" <<std::endl;
-					if (DEBUG_THREAD) print_thread_debug(thread_id, "updating distance of " + std::to_string(vertex) + " to offer distance", debug_file_stream);
-					distances[vertex] = offer_distance;
-					explore = true;
-				}
-			}
-
-
-			if (explore) 
-			{
-
-				auto [start, finish] = out_edges(vertex,graph);
-
-				for(;start != finish; start++)
-				{
-
-					vertex_descriptor neighbor = target(*start, graph);
-
-					float weight_of_edge = get(weight, *start);
-
-					float vd = offer_distance + weight_of_edge;
-
+					std::lock_guard<std::mutex> guard(*distance_mutexes[vertex]);
+					if (DEBUG_THREAD) print_thread_debug(thread_id, "offer distance is " +std::to_string(offer_distance) + " and the already done distance is " + std::to_string(distances[vertex]), debug_file_stream);
+					if(DEBUG) std::cout<<"offer distance is "<<offer_distance <<" and distances[vertex] is "<<distances[vertex] <<std::endl;
+					if(offer_distance < distances[vertex])
 					{
-						if (DEBUG_THREAD) print_thread_debug(thread_id, "updating node's predecessor", debug_file_stream);
-						std::scoped_lock guard(*predecessor_mutexes[neighbor]);
-						//now update this node's predecessor 
-						predecessors[neighbor] = vertex;
+						if (DEBUG) std::cout <<"updating distances of " <<vertex<< " to offer_distance" <<std::endl;
+						if (DEBUG_THREAD) print_thread_debug(thread_id, "updating distance of " + std::to_string(vertex) + " to offer distance", debug_file_stream);
+						distances[vertex] = offer_distance;
+						explore = true;
 					}
+				}
 
-					relax_vertex(neighbor, 
-					   	vd,  
-		   				offer_pq,
-		   				distance_mutexes, 
-		   				distances,
-		   				thread_id );
+
+				if (explore) 
+				{
+
+					auto [start, finish] = out_edges(vertex,graph);
+
+					for(;start != finish; start++)
+					{
+
+						vertex_descriptor neighbor = target(*start, graph);
+
+						float weight_of_edge = get(weight, *start);
+
+						float vd = offer_distance + weight_of_edge;
+
+						{
+							if (DEBUG_THREAD) print_thread_debug(thread_id, "updating node's predecessor", debug_file_stream);
+							std::scoped_lock guard(*predecessor_mutexes[neighbor]);
+							//now update this node's predecessor 
+							predecessors[neighbor] = vertex;
+						}
+
+						relax_vertex(neighbor, 
+						   	vd,  
+			   				offer_pq,
+			   				distance_mutexes, 
+			   				distances,
+			   				thread_id );
+					}
 				}
 			}
-
 		}
 		else // priority  queue is empty
 		{	
@@ -446,6 +448,9 @@ void parallel_dijkstra_thread(vector<bool>& done,
 				std::scoped_lock guard(done_mutex);
 				done[thread_id] = true;
 			}
+
+			const struct timespec NANOSEC = { 0, 1 };
+			nanosleep(&NANOSEC, NULL);
 			if (DEBUG_THREAD) print_thread_debug(thread_id, "this thread is done!", debug_file_stream);
 
 
@@ -456,7 +461,7 @@ void parallel_dijkstra_thread(vector<bool>& done,
 				std::cout <<"thread id is" <<thread_id<<std::endl;
 			}
 
-			int i = 0 ;
+			int i = 0;
 			//make sure all the other threads are done too
 			while(done[i] && i < done.size()) 
 			{
