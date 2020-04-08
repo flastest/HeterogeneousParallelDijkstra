@@ -1,5 +1,4 @@
 #include "BGL_Dijkstra.hh"
-#include <fstream>
 using namespace std;
 using namespace boost;
 
@@ -42,7 +41,8 @@ macro for printing, which prints thread number
 
 
 std::mutex print_mutex;
-// a macro for printing?? locks a thing so the threads don't print over each other
+
+
 void print_thread_debug(int thread_id, std::string debug_message, ostream& output_stream)
 {
 	//first lock the mutex
@@ -59,19 +59,8 @@ ofstream debug_file_stream;
 //https://www.boost.org/doc/libs/1_60_0/libs/graph/doc/adjacency_list.html
 
 //https://www.boost.org/doc/libs/1_65_1/libs/graph_parallel/doc/html/dijkstra_example.html
-typedef adjacency_list<listS, vecS, directedS,
-                   no_property,                 // Vertex properties
-                   property<edge_weight_t, int> // Edge properties
-                   > graph_t;
 
-typedef graph_traits < graph_t >::vertex_descriptor vertex_descriptor;
-typedef graph_traits < graph_t >::edge_descriptor edge_descriptor;
 
-typedef std::pair<int, int> Edge;
-
-using predecessor_map_t = map<vertex_descriptor,vertex_descriptor>;
-
-using distance_map_t = map<vertex_descriptor, float>;
 
 
 // this takes a graph and makes a map of nodes and distances to source.
@@ -262,7 +251,7 @@ void relax_vertex(vertex_descriptor v,
 		   distance_map_t& distances,
 		   int thread_id )
 {
-	std::lock_guard guard(*distance_mutexes[v]);
+	std::lock_guard<std::mutex> guard(*distance_mutexes[v]);
 	//now I can play around with offers[v]
 	
 
@@ -424,8 +413,8 @@ void parallel_dijkstra_thread(vector<bool>& done,
 						float vd = offer_distance + weight_of_edge;
 
 						{
-							if (DEBUG_THREAD) print_thread_debug(thread_id, "updating node's predecessor", debug_file_stream);
-							std::scoped_lock guard(*predecessor_mutexes[neighbor]);
+							if (DEBUG_THREAD) print_thread_debug(thread_id, "updating "+ std::to_string(neighbor) +"'s predecessor", debug_file_stream);
+							std::lock_guard<std::mutex> guard(*predecessor_mutexes[neighbor]);
 							//now update this node's predecessor 
 							predecessors[neighbor] = vertex;
 						}
@@ -445,12 +434,12 @@ void parallel_dijkstra_thread(vector<bool>& done,
 
 			if(DEBUG) std::cout<< "this thread is done!" <<std::endl;
 			{
-				std::scoped_lock guard(done_mutex);
+				std::lock_guard<std::mutex> guard(done_mutex);
 				done[thread_id] = true;
 			}
 
-			const struct timespec NANOSEC = { 0, 1 };
-			nanosleep(&NANOSEC, NULL);
+			//const struct timespec NANOSEC = { 0, 1 };
+			//nanosleep(&NANOSEC, NULL);
 			if (DEBUG_THREAD) print_thread_debug(thread_id, "this thread is done!", debug_file_stream);
 
 
