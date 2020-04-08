@@ -887,11 +887,12 @@ time_type get_min_graph_time_for_given_amount_of_threads(bool TEST_DEBUG, int nu
 			// }
 			if(parallel_results[i] != BGL_results[i])
 			{
-				if(parallel_results[i] != INFINITY && BGL_results[i] !=  2147483647)
-				{
+				//std::cout<<"testing parallel_results: " << parallel_results[i] <<" and " <<"BGL_results: " <<BGL_results[i]<<std::endl;
+				if(parallel_results[i] != INFINITY && (BGL_results[i] !=  2147483647 || BGL_results[i] !=  -2147483647))
+				{	
 					std::cout<<"parallel dijkstra produced different result than BGL"<<std::endl;
-					return -1;	
-				} 
+					return -1;
+				}
 			}
 			
 			//not sure if I need to check predecessors because they might be different
@@ -899,21 +900,21 @@ time_type get_min_graph_time_for_given_amount_of_threads(bool TEST_DEBUG, int nu
 
 		min_time = t < min_time ? t : min_time; 
 	}
-	if (TEST_DEBUG)std::cout<< "results are" << print_dijkstra_results(g, parallel_results) <<std::endl;
+	//if (TEST_DEBUG)std::cout<< "results are:"<<std::endl << print_dijkstra_results(g, parallel_results) <<std::endl;
 	return min_time;
 }
 
 int main()
 {
 	//stuck: bug somewhere, performancebug
-	const std::string graph_name = "100nodes.txt";
+	const std::string graph_name = "1mnodes.txt";
 
-	generate_graph(graph_name,100,500);
+	generate_graph(graph_name,1000000,4194300);
 	std::cout<<"graph has been generated." <<std::endl;
 
 
 	bool debug_on = true;
-	const int number_trials = 5;
+	const int number_trials = 1;
 	ofstream file_stream;
   	file_stream.open ("32threads.txt");
   	std::cout<<"about to start 1st thread"<<std::endl;
