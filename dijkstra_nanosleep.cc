@@ -68,11 +68,14 @@ using mutex_map_t = std::map<vertex_descriptor, mutex_ptr>;
 
 //does each thread ID correspond to a vertex descriptor?
 //offer corresponds to vd
-void relax_vertex(vertex_descriptor v, 
+void relax_vertex(vertex_descriptor v,
+			vertex_descriptor origin, 
 		   float vd,
 		   offer_pqueue_t& offer_pq, 
 		   mutex_map_t distance_mutexes,
 		   distance_map_t& distances,
+		   mutex_map_t& predecessor_mutexes,
+		   predecessor_map_t& predecessors,
 		   int thread_id )
 {
 	std::lock_guard<std::mutex> guard(*distance_mutexes[v]);
@@ -83,6 +86,10 @@ void relax_vertex(vertex_descriptor v,
 			if (DEBUG_THREAD) print_thread_debug(thread_id, "ADDING AN OFFER TO " + std::to_string(v) + "!!! distnace is " + std::to_string(vd) , debug_file_stream);
 			std::lock_guard<std::mutex> guard2(pq_mutex);
 			offer_pq.push(offer_t(v,vd));
+			if (DEBUG_THREAD) print_thread_debug(thread_id, "updating "+ std::to_string(v) +"'s predecessor", debug_file_stream);
+			std::lock_guard<std::mutex> guard(*predecessor_mutexes[v]);
+			//now update this node's predecessor 
+			predecessors[v] = origin;
 		}
 	}
 }
@@ -205,18 +212,14 @@ void parallel_dijkstra_thread(vector<bool>& done,
 
 						float vd = offer_distance + weight_of_edge;
 
-						{
-							if (DEBUG_THREAD) print_thread_debug(thread_id, "updating "+ std::to_string(neighbor) +"'s predecessor", debug_file_stream);
-							std::lock_guard<std::mutex> guard(*predecessor_mutexes[neighbor]);
-							//now update this node's predecessor 
-							predecessors[neighbor] = vertex;
-						}
-
 						relax_vertex(neighbor, 
+						   	vertex,
 						   	vd,  
 			   				offer_pq,
 			   				distance_mutexes, 
 			   				distances,
+			   				predecessor_mutexes,
+							predecessors,
 			   				thread_id );
 					}
 				}

@@ -69,25 +69,38 @@ using mutex_map_t = std::map<vertex_descriptor, mutex_ptr>;
 
 
 
+//now for the cond var stuffffffffffffff
+std::mutex mutex_cond_var;
+std::condition_variable cond_var_offer_pq;
+
+
 
 
 //does each thread ID correspond to a vertex descriptor?
 //offer corresponds to vd
-void relax_vertex(vertex_descriptor v, 
+void relax_vertex(vertex_descriptor neighbor, 
+			vertex_descriptor origin,
 		   float vd,
 		   offer_pqueue_t& offer_pq, 
 		   mutex_map_t distance_mutexes,
 		   distance_map_t& distances,
+		   mutex_map_t& predecessor_mutexes,
+		   predecessor_map_t& predecessors,
 		   int thread_id )
 {
-	std::lock_guard<std::mutex> guard(*distance_mutexes[v]);
-	if (vd < distances[v]) 
+	std::lock_guard<std::mutex> guard(*distance_mutexes[neighbor]);
+	if (vd < distances[neighbor]) 
 	{
 
 		{
-			if (DEBUG_THREAD) print_thread_debug(thread_id, "ADDING AN OFFER TO " + std::to_string(v) + "!!! distnace is " + std::to_string(vd) , debug_file_stream);
+			if (DEBUG_THREAD) print_thread_debug(thread_id, "ADDING AN OFFER TO " + std::to_string(neighbor) + "!!! distnace is " + std::to_string(vd) , debug_file_stream);
 			std::lock_guard<std::mutex> guard2(pq_mutex);
-			offer_pq.push(offer_t(v,vd));
+			offer_pq.push(offer_t(neighbor,vd));
+			
+			if (DEBUG_THREAD) print_thread_debug(thread_id, "updating "+ std::to_string(neighbor) +"'s predecessor", debug_file_stream);
+			std::lock_guard<std::mutex> guard(*predecessor_mutexes[neighbor]);
+			//now update this node's predecessor 
+			predecessors[neighbor] = origin;
 		}
 	}
 }
@@ -119,7 +132,7 @@ distance_map_t initialize_distances_from_source_and_mutex_maps(
 
 
 //this version sleeps for a random amount before checking all the done nodes
-void parallel_dijkstra_thread(vector<bool>& done,
+void parallel_dijkstra_thread(int& done,
 					int thread_id,
 					offer_pqueue_t& offer_pq,
 					distance_map_t& distances,
@@ -210,18 +223,15 @@ void parallel_dijkstra_thread(vector<bool>& done,
 
 						float vd = offer_distance + weight_of_edge;
 
-						{
-							if (DEBUG_THREAD) print_thread_debug(thread_id, "updating "+ std::to_string(neighbor) +"'s predecessor", debug_file_stream);
-							std::lock_guard<std::mutex> guard(*predecessor_mutexes[neighbor]);
-							//now update this node's predecessor 
-							predecessors[neighbor] = vertex;
-						}
-
+						//now checking to see if we shoud relax the neighbors
 						relax_vertex(neighbor, 
+							vertex,
 						   	vd,  
 			   				offer_pq,
 			   				distance_mutexes, 
 			   				distances,
+			   				predecessor_mutexes,
+							predecessors,
 			   				thread_id );
 					}
 				}
@@ -234,32 +244,12 @@ void parallel_dijkstra_thread(vector<bool>& done,
 			
 			{
 				std::lock_guard<std::mutex> guard(done_mutex);
-				done[thread_id] = true;
+				done++;
 			}
 
-			const struct timespec NANOSEC = { 0, 1 };
-			nanosleep(&NANOSEC, NULL);
-			if (DEBUG_THREAD) print_thread_debug(thread_id, "this thread is done!", debug_file_stream);
-
-
-			if (DEBUG)
-			{
-				std::cout << "length of done is "<<done.size()<<std::endl;
-				std::cout << "done[0] is "<<done[0]<<std::endl;
-				std::cout <<"thread id is" <<thread_id<<std::endl;
-			}
-
-			int i = 0;
-			//make sure all the other threads are done too
-			while(done[i] && i < done.size()) 
-			{
-				i++;
-			}
-			if(i == done.size())
-			{
-				return;
-			} //still need to take care of this livelock TO DO TODO 
-			done[thread_id] = false;
+			//now the thread will go to sleep until the cond var wakes it up
+			std::lock_guard<std::mutex> guard(mutex_cond_var);
+    		cond_var_offer_pq.wait(mutex_cond_var, []{return added_to_pqueue;});
 		}
 	}
 }
@@ -285,7 +275,7 @@ distance_map_t parallel_dijkstra(const graph_t &graph,
 	mutex_map_t predecessor_mutexes;
 
 	//this keeps track of the threads that are done
-	vector<bool> done(NUM_THREADS, false); 
+	int done = 0;
 
 	distance_map_t distances = initialize_distances_from_source_and_mutex_maps(graph, distance_mutexes, predecessor_mutexes);
 
