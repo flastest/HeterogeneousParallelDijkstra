@@ -890,12 +890,12 @@ time_type get_min_graph_time_for_given_amount_of_threads(bool TEST_DEBUG, int nu
 				//std::cout<<"testing parallel_results: " << parallel_results[i] <<" and " <<"BGL_results: " <<BGL_results[i]<<std::endl;
 				if(parallel_results[i] != INFINITY && (BGL_results[i] !=  2147483647 || BGL_results[i] !=  -2147483647))
 				{	
-					std::cout<<"parallel dijkstra produced different result than BGL"<<std::endl;
+					std::cout<<"ERROR: parallel dijkstra produced different result than BGL"<<std::endl;
 					return -1;
 				}
 			}
 			
-			//not sure if I need to check predecessors because they might be different
+			//not sure if I need to check predecessors because they might be different even with functioning code
 		}
 
 		min_time = t < min_time ? t : min_time; 
@@ -904,39 +904,64 @@ time_type get_min_graph_time_for_given_amount_of_threads(bool TEST_DEBUG, int nu
 	return min_time;
 }
 
-int main()
-{
-	//stuck: bug somewhere, performancebug
-	const std::string graph_name = "1mnodes.txt";
 
-	generate_graph(graph_name,1000000,4194300);
-	std::cout<<"graph has been generated." <<std::endl;
+//first arg is num trials, second arg is starting number of threads, 3rd arg is maximum number threads tested
+// 4th arg is the name of a graph if u want to give one, 5th arg is name of output file
+
+//so u can do ./cond_var_test.exe 1 1 4 1mnodes.txt times_condvar.txt 
+int main(int argc, char** argv)
+{
 
 
 	bool debug_on = true;
-	const int number_trials = 1;
-	ofstream file_stream;
-  	file_stream.open ("32threads.txt");
-  	std::cout<<"about to start 1st thread"<<std::endl;
-	file_stream << "1\t" << get_min_graph_time_for_given_amount_of_threads(debug_on, 1, number_trials, graph_name)<< "\n------\n";
-	std::cout<<"about to start 2nd thread"<<std::endl;
-	file_stream << "2\t" << get_min_graph_time_for_given_amount_of_threads(debug_on, 2, number_trials, graph_name)<< "\n------\n";
+	int number_trials = 1;
+	int num_threads = 1;
+	int max_threads = 2;
+	std::string graph_name = "";
+	std::string ostream_name = "times.txt";
+
+	if (argc >= 2)
+	{
+		number_trials = atoi(argv[1]);
+	}
+	if (argc >= 3)
+	{
+		num_threads = atoi(argv[2]);
+		max_threads = num_threads + 1;
+	}
+	if (argc >= 4)
+	{
+		max_threads = atoi(argv[3]);
+		if (max_threads	< num_threads + 1) max_threads = num_threads + 1;
+	} 
+	if (argc >= 5) 
+	{
+		graph_name = argv[4];
+	}
+	if (argc<5) {
+		graph_name = "1knodes.txt";
+
+		generate_graph(graph_name,1000,5000);
+		std::cout<<"graph has been generated." <<std::endl;
+	}
+
+	if (argc >= 6)
+	{
+		ostream_name = argv[5];
+	}
 	
-	std::cout<<"about to start 3rd thread"<<std::endl;
-	file_stream << "3\t" << get_min_graph_time_for_given_amount_of_threads(debug_on, 3, number_trials, graph_name)<< "\n------\n";
-	std::cout<<"about to start 4th thread"<<std::endl;
-	file_stream << "4\t" << get_min_graph_time_for_given_amount_of_threads(debug_on, 4, number_trials, graph_name)<< "\n------\n";
-	if (false) return 1;
-	std::cout<<"about to start 6th thread"<<std::endl;
-	file_stream << "6\t" << get_min_graph_time_for_given_amount_of_threads(debug_on, 6, number_trials, graph_name)<< "\n------\n";
-	std::cout<<"about to start 8th thread"<<std::endl;
-	file_stream << "8\t" << get_min_graph_time_for_given_amount_of_threads(debug_on, 8, number_trials, graph_name)<< "\n------\n";
-	std::cout<<"about to start 16th thread"<<std::endl;
-	file_stream << "16\t" << get_min_graph_time_for_given_amount_of_threads(debug_on, 16, number_trials, graph_name) << "\n------\n";
-	std::cout<<"about to start 24th thread"<<std::endl;
-	file_stream << "24\t" << get_min_graph_time_for_given_amount_of_threads(debug_on, 24, number_trials, graph_name) << "\n------\n";
-	std::cout<<"about to start 32nd thread"<<std::endl;
-	file_stream << "32\t" << get_min_graph_time_for_given_amount_of_threads(debug_on, 32, number_trials, graph_name) << "\n------\n";
+
+
+	ofstream file_stream;
+  	file_stream.open (ostream_name);
+
+  	for (int i = num_threads; i <= max_threads; i*=2)
+  	{
+  		std::cout <<"about to start thread "<<i<<std::endl;
+  		file_stream<<i<<"\t"<<get_min_graph_time_for_given_amount_of_threads(debug_on, i, number_trials, graph_name)<< "\n";
+
+  	}
+
 	file_stream.close();
 
 

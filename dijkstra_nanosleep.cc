@@ -4,7 +4,7 @@
 bool DEBUG = false;
 
 //this one is for the print statements that print threads by locking a print mutex
-bool DEBUG_THREAD = true;
+bool DEBUG_THREAD = false;
 
 
 distance_map_t dijkstra_shortest_paths_swag_version(
@@ -130,6 +130,7 @@ void parallel_dijkstra_thread(vector<bool>& done,
 					predecessor_map_t& predecessors,
 					const graph_t& graph)
 {
+	std::cout<<"hi, I'm " << thread_id <<std::endl;
 	if (DEBUG_THREAD) print_thread_debug(thread_id, "starting thread", debug_file_stream);
 	if (DEBUG) std::cout<<"starting a thread" <<std::endl;
 	const auto weight = get(edge_weight, graph);
@@ -172,7 +173,7 @@ void parallel_dijkstra_thread(vector<bool>& done,
 					if (DEBUG_THREAD) print_thread_debug(thread_id, "offer is locked. its node is "+std::to_string(offer.first)+" and its dist is " +std::to_string(offer.second), debug_file_stream);
 					offer_found = true;
 				}
-				print_thread_debug(thread_id, "unlocking offer", debug_file_stream);
+				if (DEBUG_THREAD) print_thread_debug(thread_id, "unlocking offer", debug_file_stream);
 			}	
 
 

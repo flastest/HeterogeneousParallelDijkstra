@@ -206,7 +206,7 @@ distance_map_t dijkstra_shortest_paths_swag_version(
 
 
 
-std::mutex pq_mutex;
+//std::mutex pq_mutex;
 //global mutex for the pq of offers
 
 
@@ -286,7 +286,7 @@ void relax_vertex(vertex_descriptor neighbor,
 		//this is publishOfferNoMP
 		{
 			if (DEBUG_THREAD) print_thread_debug(thread_id, "ADDING AN OFFER TO " + std::to_string(neighbor) + "!!! distnace is " + std::to_string(vd) , debug_file_stream);
-			std::lock_guard<std::mutex> guard2(pq_mutex);
+			//std::lock_guard<std::mutex> guard2(pq_mutex);
 			offer_pq.push(offer_t(neighbor,vd));
 			if (DEBUG_THREAD) print_thread_debug(thread_id, "updating "+ std::to_string(neighbor) +"'s predecessor", debug_file_stream);
 			std::lock_guard<std::mutex> guard(*predecessor_mutexes[neighbor]);
@@ -370,7 +370,7 @@ void parallel_dijkstra_thread(vector<bool>& done,
 			{
 				print_thread_debug(thread_id, "locking offer", debug_file_stream);
 				if (DEBUG) std::cout<<"locking offer"<<std::endl;
-				std::lock_guard<std::mutex> guard(pq_mutex);
+				//std::lock_guard<std::mutex> guard(pq_mutex);
 				if(!offer_pq.empty())
 				{
 					offer = offer_pq.top();
